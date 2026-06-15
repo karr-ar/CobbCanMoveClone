@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="CobbCanMoveC.vcxproj" />
+  <Project Path="CobbCanMoveC.vcxproj" Id="6e7ee75a-7c3b-4ba7-b67d-716e841c9ae1" />
 </Solution>
