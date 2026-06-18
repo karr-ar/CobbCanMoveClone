@@ -11,6 +11,7 @@ public:
     void draw(sf::RenderWindow &window);
     void update(float dt);
     void inputUpdate();
+    sf::Sprite getPlayerSprite();
 private:
     sf::Sprite playerSprite;
     sf::Keyboard::Scancode left;

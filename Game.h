@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "ResourceHolder.hpp"
 #include "ResourceIdentifiers.h"
+#include "Map.h"
 class Game
 { 
 public:
@@ -13,11 +14,16 @@ private:
 	void update(float dt);
 	void render();
 	void createWindow(sf::Vector2f windowSize, std::string windowTitle);
+	bool checkCollision(sf::FloatRect first, sf::FloatRect second);
+	void playerWallCollision();
 private:
 	sf::Vector2f windowSize;
 	sf::RenderWindow window;
 
+	sf::View view;
+
 	std::unique_ptr<Player> player;
+	std::unique_ptr<Map> map;
 	//resourceHolder(texture)
 	ResourceHolder<TextureID, sf::Texture> textureHolder;
 };

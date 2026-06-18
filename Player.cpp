@@ -1,7 +1,10 @@
 #include "Player.h"
 Player::Player(sf::Vector2f velocity, sf::Vector2f position, sf::Vector2f direction, sf::Texture& texture, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
 	sf::Keyboard::Scancode up, sf::Keyboard::Scancode down) : Entity(velocity, position, direction), playerSprite(texture), playerAnimation(texture, { 6,6,6,6,6,6,6,6 }, 0.1, sf::Vector2u(6, 8)) {
+	
+	playerSprite.setOrigin(sf::Vector2f(playerAnimation.getXyRect().size.x/2, playerAnimation.getXyRect().size.y / 2));
 	spriteRowNo = 0;
+
 	this->left = left;
 	this->right = right;
 	this->up = up;
@@ -74,4 +77,7 @@ void Player::update(float dt) {
 }
 void Player::draw(sf::RenderWindow& window) {
 	window.draw(playerSprite);
+}
+sf::Sprite Player::getPlayerSprite() {
+	return playerSprite;
 }
