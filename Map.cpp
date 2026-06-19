@@ -11,19 +11,19 @@ Map::Map(std::string textPath, sf::Texture &wallTexture, sf::Texture &tileTextur
 	for (int i = 0;i < map.size();i++) {
 		for (int j = 0;j < map[i].size();j++) {
 			if ((map[i][j]) == 'W'){
-				walls.push_back(sf::Vector2f(i*sizeX,j*sizeY));
+				walls.push_back(sf::Vector2f(j*sizeX,i*sizeY));
 			}
 			else if ((map[i][j]) == 'T') {
-				tiles.push_back(sf::Vector2f(i * sizeX, j * sizeY));
+				tiles.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 			}
 			else if ((map[i][j]) == 'P') {
-				tiles.push_back(sf::Vector2f(i * sizeX, j * sizeY));
-				playerInitialPos = sf::Vector2f(i * sizeX, j * sizeY);
+				tiles.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+				playerInitialPos = sf::Vector2f(j * sizeX, i * sizeY);
 			}
 		}
 	}
-	wallSprite.setOrigin(sf::Vector2f(wallTexture.getSize().x, wallTexture.getSize().y));
-	tileSprite.setOrigin(sf::Vector2f(tileTexture.getSize().x, tileTexture.getSize().y));
+	wallSprite.setOrigin(sf::Vector2f(wallTexture.getSize().x/2, wallTexture.getSize().y/2));
+	tileSprite.setOrigin(sf::Vector2f(tileTexture.getSize().x/2, tileTexture.getSize().y/2));
 }
 sf::Vector2f Map::getPlayerInitialPosition() {
 	return playerInitialPos;

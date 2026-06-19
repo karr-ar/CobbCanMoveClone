@@ -9,9 +9,12 @@ public:
                                                                                                         sf::Keyboard::Scancode up, sf::Keyboard::Scancode down);
     void setSprite(sf::Texture);
     void draw(sf::RenderWindow &window);
-    void update(float dt);
+    sf::Vector2f update(float dt);
     void inputUpdate();
     sf::Sprite getPlayerSprite();
+    void setPosition(sf::Vector2f);
+    void setPosition(float px, float py);
+    void move(sf::Vector2f offset);
 private:
     sf::Sprite playerSprite;
     sf::Keyboard::Scancode left;

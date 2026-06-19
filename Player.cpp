@@ -29,7 +29,7 @@ void Player::inputUpdate() {
 	this->setDirection(direction);
 	
 }
-void Player::update(float dt) {
+sf::Vector2f Player::update(float dt) {
 	spriteRowNo = 0;
 
 	sf::Vector2f position(this->getPosition());
@@ -70,14 +70,27 @@ void Player::update(float dt) {
 		spriteRowNo = 3;
 	}
 	
-	this->setPosition(position);
 	playerAnimation.update(spriteRowNo,dt);
 	playerSprite.setTextureRect(playerAnimation.getXyRect());
-	playerSprite.setPosition(this->getPosition());
+	return position;
 }
 void Player::draw(sf::RenderWindow& window) {
 	window.draw(playerSprite);
 }
 sf::Sprite Player::getPlayerSprite() {
 	return playerSprite;
+}
+void Player::setPosition(sf::Vector2f position) {
+	Entity::setPosition(position);
+	playerSprite.setPosition(position);
+}
+
+void Player::setPosition(float px,float py) {
+	Entity::setPosition(px,py);
+	playerSprite.setPosition(getPosition());
+}
+
+void Player::move(sf::Vector2f offset) {
+	this->setPosition(this->getPosition() + offset);
+	playerSprite.move(offset);
 }

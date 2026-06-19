@@ -35,7 +35,7 @@ Game::Game() {
 	sf::Vector2f playerInitialLoc = map->getPlayerInitialPosition();
 	
 	//Player Initialization
-	player = std::make_unique<Player>(sf::Vector2f(100,100),playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
+	player = std::make_unique<Player>(sf::Vector2f(1000,1000),playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
 		sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S);
 
 	
@@ -65,7 +65,12 @@ void Game::render() {
 	window.display();
 }
 void Game::update(float dt) {
-	player->update(dt);
+	sf::Vector2f previousPosition = player->getPosition();
+	sf::Vector2f offset= player->update(dt) - previousPosition;
+	player->move(sf::Vector2f(offset.x, 0));
+	playerWallCollision(true);
+	player->move(sf::Vector2f(0, offset.y));
+	playerWallCollision(false);
 	view.setCenter(sf::Vector2f(player->getPosition()));
 }
 //collision for player and walls
@@ -75,5 +80,32 @@ bool Game::checkCollision(sf::FloatRect first, sf::FloatRect second) {
 	}
 	else {
 		false;
+	}
+}
+
+void Game::playerWallCollision(bool x_y) {    // true for x and false for y
+	std::vector<sf::Vector2f > walls = map->getWalls();
+	sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
+	for (int i = 0;i < walls.size();i++) {
+		sf::FloatRect wallRect = map->getWallSprite().getGlobalBounds();
+		wallRect.position = walls[i]- sf::Vector2f(map->getWallSprite().getTexture().getSize().x/2, map->getWallSprite().getTexture().getSize().y/2);
+		if (checkCollision(playerRect, wallRect) && x_y) {
+			if (player->getDirection().x > 0) {
+				player->setPosition(player->getPosition().x - playerRect.findIntersection(wallRect)->size.x, player->getPosition().y);
+			}
+			else if (player->getDirection().x < 0) {
+				player->setPosition(player->getPosition().x + playerRect.findIntersection(wallRect)->size.x, player->getPosition().y);
+			}
+			
+		}
+		if (checkCollision(playerRect, wallRect) && !x_y) {
+			if (player->getDirection().y > 0) {
+				player->setPosition(player->getPosition().x , player->getPosition().y - playerRect.findIntersection(wallRect)->size.y);
+			}
+			else if (player->getDirection().y < 0) {
+				player->setPosition(player->getPosition().x , player->getPosition().y + playerRect.findIntersection(wallRect)->size.y);
+			}
+
+		}
 	}
 }
