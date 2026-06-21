@@ -3,13 +3,12 @@
 class Entity
 {
 private:
-	sf::Vector2f velocity;
+	float speed;
 	sf::Vector2f position;
 	sf::Vector2f direction;
 public:
-	void setVelocity(sf::Vector2f velocity);
-	void setVelocity(float vx, float vy);
-	sf::Vector2f getVelocity();
+	void setVelocity(float speed);
+	float getVelocity();
 
 	void setPosition(sf::Vector2f position);
 	void setPosition(float px, float py);
@@ -19,6 +18,6 @@ public:
 	void setDirection(float dx, float dy);
 	sf::Vector2f getDirection();
 
-	Entity(sf::Vector2f velocity, sf::Vector2f position, sf::Vector2f direction);
+	Entity(float speed, sf::Vector2f position, sf::Vector2f direction);
 };
 

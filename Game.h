@@ -4,6 +4,7 @@
 #include "ResourceHolder.hpp"
 #include "ResourceIdentifiers.h"
 #include "Map.h"
+#include "Cobb.h"
 class Game
 { 
 public:
@@ -24,6 +25,7 @@ private:
 
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Map> map;
+	std::unique_ptr<Cobb> cobb;
 	//resourceHolder(texture)
 	ResourceHolder<TextureID, sf::Texture> textureHolder;
 };

@@ -1,14 +1,9 @@
 #include "Entity.h"
-void Entity::setVelocity(sf::Vector2f velocity) {
-	this->velocity.x = velocity.x;
-	this->velocity.y = velocity.y;
+void Entity::setVelocity(float speed) {
+	this->speed =  speed;
 }
-void Entity::setVelocity(float vx, float vy) {
-	velocity.x = vx;
-	velocity.y = vy;
-}
-sf::Vector2f Entity::getVelocity() {
-	return velocity;
+float Entity::getVelocity() {
+	return speed;
 }
 void Entity::setPosition(sf::Vector2f position) {
 	this->position.x = position.x;
@@ -34,8 +29,8 @@ sf::Vector2f Entity::getDirection() {
 }
 
 
-Entity::Entity(sf::Vector2f velocity, sf::Vector2f position, sf::Vector2f direction) {
-	setVelocity(velocity);
+Entity::Entity(float speed, sf::Vector2f position, sf::Vector2f direction) {
+	setVelocity(speed);
 	setPosition(position);
 	setDirection(direction);
 }

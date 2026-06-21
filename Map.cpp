@@ -15,10 +15,30 @@ Map::Map(std::string textPath, sf::Texture &wallTexture, sf::Texture &tileTextur
 			}
 			else if ((map[i][j]) == 'T') {
 				tiles.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 			}
 			else if ((map[i][j]) == 'P') {
 				tiles.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 				playerInitialPos = sf::Vector2f(j * sizeX, i * sizeY);
+			}
+			else if (map[i][j] == 'C') {
+				cobbInitialPos = sf::Vector2f(j * sizeX, i * sizeY);
+				tiles.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+			}
+			else if (map[i][j] == 'w') {
+			}
+			else if (map[i][j] == 'G') {
+				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+			}
+			else if (map[i][j] == 'E') {
+				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+			}
+			else if (map[i][j] == 'F') {
+				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+			}
+			else if (map[i][j] == 'e') {
+				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 			}
 		}
 	}
@@ -43,4 +63,10 @@ std::vector <sf::Vector2f> Map::getWalls() {
 }
 sf::Sprite Map::getWallSprite() {
 	return wallSprite;
+}
+sf::Vector2f Map::getCobbInitialPosition() {
+	return cobbInitialPos;
+}
+std::vector <sf::Vector2f> Map::getCobbsAllowablePositions() {
+	return cobbsAllowablePositions;
 }

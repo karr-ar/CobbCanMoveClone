@@ -1,6 +1,7 @@
 #include "Game.h"
 void Game::run() {
 	sf::Clock clock;
+	srand((int)time(0));
 	while (window.isOpen()) {
 		inputUpdate();
 		sf::Time dt = clock.restart();
@@ -24,6 +25,7 @@ Game::Game() {
 	textureHolder.load(TextureID::Player, "sprites/graphics/Player.PNG");
 	textureHolder.load(TextureID::Wall, "sprites/graphics/wall_left.PNG");
 	textureHolder.load(TextureID::Tile, "sprites/graphics/floor_light.PNG");
+	textureHolder.load(TextureID::Cobb, "sprites/graphics/cobb.png");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)
@@ -34,10 +36,16 @@ Game::Game() {
 	//finding players initial location
 	sf::Vector2f playerInitialLoc = map->getPlayerInitialPosition();
 	
+	//finding cobbs initial position
+	sf::Vector2f cobbInitialLoc = map->getCobbInitialPosition();
+	
 	//Player Initialization
-	player = std::make_unique<Player>(sf::Vector2f(1000,1000),playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
+	player = std::make_unique<Player>(1000,playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
 		sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S);
 
+	//cobb Initialize
+	cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), 120, cobbInitialLoc ,sf::Vector2f(0,0));  //here direction and velocity is not used but since it is the child of entity class
+																														//we're forced to use them
 	
 
 	//view init
@@ -55,6 +63,8 @@ void Game::inputUpdate() {
 			windowSize = newSize;
 		}
 		player->inputUpdate();
+		std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
+		cobb->inputUpdate(cobbsAllowedPositions,rand()%cobbsAllowedPositions.size());
 	}
 }
 void Game::render() {
@@ -62,15 +72,16 @@ void Game::render() {
 	window.setView(view);
 	map->draw(window);
 	player->draw(window);
+	cobb->draw(window);
 	window.display();
 }
 void Game::update(float dt) {
-	sf::Vector2f previousPosition = player->getPosition();
-	sf::Vector2f offset= player->update(dt) - previousPosition;
+	sf::Vector2f offset= player->update(dt) ;
 	player->move(sf::Vector2f(offset.x, 0));
 	playerWallCollision(true);
 	player->move(sf::Vector2f(0, offset.y));
 	playerWallCollision(false);
+	cobb->update(dt);
 	view.setCenter(sf::Vector2f(player->getPosition()));
 }
 //collision for player and walls

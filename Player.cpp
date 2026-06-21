@@ -1,5 +1,5 @@
 #include "Player.h"
-Player::Player(sf::Vector2f velocity, sf::Vector2f position, sf::Vector2f direction, sf::Texture& texture, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
+Player::Player(float velocity, sf::Vector2f position, sf::Vector2f direction, sf::Texture& texture, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
 	sf::Keyboard::Scancode up, sf::Keyboard::Scancode down) : Entity(velocity, position, direction), playerSprite(texture), playerAnimation(texture, { 6,6,6,6,6,6,6,6 }, 0.1, sf::Vector2u(6, 8)) {
 	
 	playerSprite.setOrigin(sf::Vector2f(playerAnimation.getXyRect().size.x/2, playerAnimation.getXyRect().size.y / 2));
@@ -24,8 +24,6 @@ void Player::inputUpdate() {
 	if (sf::Keyboard::isKeyPressed(down)) {
 		direction.y += 1;
 	}
-	if (!(direction.x == 0 && direction.y == 0))
-		direction = direction.normalized();
 	this->setDirection(direction);
 	
 }
@@ -33,46 +31,35 @@ sf::Vector2f Player::update(float dt) {
 	spriteRowNo = 0;
 
 	sf::Vector2f position(this->getPosition());
-	
+	sf::Vector2f offset = this->getDirection() * this->getVelocity() * dt;
 	if (this->getDirection().x >0 && this->getDirection().y > 0) {
-		position.x += this->getVelocity().x * dt;
-		position.y += this->getVelocity().y * dt;
 		spriteRowNo = 4;
 	}
 	else if (this->getDirection().x > 0 && this->getDirection().y <0) {
-		position.x += this->getVelocity().x * dt;
-		position.y -= this->getVelocity().y * dt;
 		spriteRowNo = 6;
 	}
 	else if (this->getDirection().x < 0 && this->getDirection().y > 0) {
-		position.x -= this->getVelocity().x * dt;
-		position.y += this->getVelocity().y * dt;
 		spriteRowNo = 5;
 	}
 	else if (this->getDirection().x < 0 && this->getDirection().y < 0) {
-		position.x -= this->getVelocity().x * dt;
-		position.y -= this->getVelocity().y * dt;
 		spriteRowNo = 7;
 	}
 	else if (this->getDirection().x > 0) {
-		position.x += this->getVelocity().x * dt;
 		spriteRowNo = 2;
 	}
 	else if (this->getDirection().y > 0) {
-		position.y += this->getVelocity().y * dt;
+		spriteRowNo = 0;
 	}
 	else if (this->getDirection().x < 0) {
-		position.x -= this->getVelocity().x * dt;
 		spriteRowNo = 1;
 	}
 	else if (this->getDirection().y < 0) {
-		position.y -= this->getVelocity().y * dt;
 		spriteRowNo = 3;
 	}
 	
 	playerAnimation.update(spriteRowNo,dt);
 	playerSprite.setTextureRect(playerAnimation.getXyRect());
-	return position;
+	return offset;
 }
 void Player::draw(sf::RenderWindow& window) {
 	window.draw(playerSprite);
