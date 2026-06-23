@@ -17,6 +17,7 @@ private:
 	void createWindow(sf::Vector2f windowSize, std::string windowTitle);
 	bool checkCollision(sf::FloatRect first, sf::FloatRect second);
 	void playerWallCollision(bool x_y);
+	void cobbWallCollision(bool x_y);
 private:
 	sf::Vector2f windowSize;
 	sf::RenderWindow window;

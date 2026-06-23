@@ -3,6 +3,7 @@ Player::Player(float velocity, sf::Vector2f position, sf::Vector2f direction, sf
 	sf::Keyboard::Scancode up, sf::Keyboard::Scancode down) : Entity(velocity, position, direction), playerSprite(texture), playerAnimation(texture, { 6,6,6,6,6,6,6,6 }, 0.1, sf::Vector2u(6, 8)) {
 	
 	playerSprite.setOrigin(sf::Vector2f(playerAnimation.getXyRect().size.x/2, playerAnimation.getXyRect().size.y / 2));
+
 	spriteRowNo = 0;
 
 	this->left = left;
@@ -79,5 +80,4 @@ void Player::setPosition(float px,float py) {
 
 void Player::move(sf::Vector2f offset) {
 	this->setPosition(this->getPosition() + offset);
-	playerSprite.move(offset);
 }

@@ -40,12 +40,11 @@ Game::Game() {
 	sf::Vector2f cobbInitialLoc = map->getCobbInitialPosition();
 	
 	//Player Initialization
-	player = std::make_unique<Player>(1000,playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
+	player = std::make_unique<Player>(300,playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
 		sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S);
 
 	//cobb Initialize
-	cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), 120, cobbInitialLoc ,sf::Vector2f(0,0));  //here direction and velocity is not used but since it is the child of entity class
-																														//we're forced to use them
+	cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), 170, cobbInitialLoc ,sf::Vector2f(0,0));  
 	
 
 	//view init
@@ -62,10 +61,10 @@ void Game::inputUpdate() {
 			view.setSize(newSize);
 			windowSize = newSize;
 		}
-		player->inputUpdate();
-		std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
-		cobb->inputUpdate(cobbsAllowedPositions,rand()%cobbsAllowedPositions.size());
 	}
+	player->inputUpdate();
+	std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
+	cobb->inputUpdate(cobbsAllowedPositions, rand() % cobbsAllowedPositions.size());
 }
 void Game::render() {
 	window.clear();
@@ -76,13 +75,13 @@ void Game::render() {
 	window.display();
 }
 void Game::update(float dt) {
-	sf::Vector2f offset= player->update(dt) ;
-	player->move(sf::Vector2f(offset.x, 0));
+	sf::Vector2f offsetPlayer= player->update(dt) ;
+	player->move(sf::Vector2f(offsetPlayer.x, 0));
 	playerWallCollision(true);
-	player->move(sf::Vector2f(0, offset.y));
+	player->move(sf::Vector2f(0, offsetPlayer.y));
 	playerWallCollision(false);
-	cobb->update(dt);
-	view.setCenter(sf::Vector2f(player->getPosition()));
+	cobb->move(sf::Vector2f(cobb->update(dt)));
+	view.setCenter(player->getPosition());//for now the camera is rigid but ill fix it  later
 }
 //collision for player and walls
 bool Game::checkCollision(sf::FloatRect first, sf::FloatRect second) {
@@ -90,7 +89,7 @@ bool Game::checkCollision(sf::FloatRect first, sf::FloatRect second) {
 		return true;
 	}
 	else {
-		false;
+		return false;
 	}
 }
 
