@@ -26,6 +26,7 @@ Game::Game() {
 	textureHolder.load(TextureID::Wall, "sprites/graphics/wall_left.PNG");
 	textureHolder.load(TextureID::Tile, "sprites/graphics/floor_light.PNG");
 	textureHolder.load(TextureID::Cobb, "sprites/graphics/cobb.png");
+	textureHolder.load(TextureID::Candle, "sprites/graphics/candle_spritesheet.png");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)
@@ -40,12 +41,14 @@ Game::Game() {
 	sf::Vector2f cobbInitialLoc = map->getCobbInitialPosition();
 	
 	//Player Initialization
-	player = std::make_unique<Player>(300,playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
+	player = std::make_unique<Player>(290,playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
 		sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S);
 
 	//cobb Initialize
-	cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), 170, cobbInitialLoc ,sf::Vector2f(0,0));  
+	cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), 250, cobbInitialLoc ,sf::Vector2f(0,0));  
 	
+	//spawn the items
+	spawnItems();
 
 	//view init
 	view.setCenter(sf::Vector2f(player->getPosition()));
@@ -64,12 +67,14 @@ void Game::inputUpdate() {
 	}
 	player->inputUpdate();
 	std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
-	cobb->inputUpdate(cobbsAllowedPositions, rand() % cobbsAllowedPositions.size());
+	//cobb->RandomMovement(cobbsAllowedPositions, rand() % cobbsAllowedPositions.size());
+	cobb->cobbCanSee(player->getPosition(),true);
 }
 void Game::render() {
 	window.clear();
 	window.setView(view);
 	map->draw(window);
+	drawItems();
 	player->draw(window);
 	cobb->draw(window);
 	window.display();
@@ -81,6 +86,7 @@ void Game::update(float dt) {
 	player->move(sf::Vector2f(0, offsetPlayer.y));
 	playerWallCollision(false);
 	cobb->move(sf::Vector2f(cobb->update(dt)));
+	updateItems(dt);
 	view.setCenter(player->getPosition());//for now the camera is rigid but ill fix it  later
 }
 //collision for player and walls
@@ -117,5 +123,26 @@ void Game::playerWallCollision(bool x_y) {    // true for x and false for y
 			}
 
 		}
+	}
+}
+void Game::spawnItems() {
+	std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
+	//spawning candles 
+	int no_of_candles = 16;
+	for (int i = 0;i < 16;i++) {
+		items.push_back(std::make_unique<Candle>(50,25, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()],textureHolder.get(TextureID::Candle)));   //hard coding for now
+	}
+	//spawning rocks
+}
+void Game::drawItems() {  //draws everything except equipped item
+	for (int i = 0;i < items.size();i++) {
+		if (!items[i]->getEquipped()) {
+			items[i]->draw(window);
+		}
+	}
+}
+void Game::updateItems(float dt) {
+	for (int i = 0;i < items.size();i++) {
+		items[i]->update(dt, player->getPosition());
 	}
 }

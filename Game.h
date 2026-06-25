@@ -5,6 +5,8 @@
 #include "ResourceIdentifiers.h"
 #include "Map.h"
 #include "Cobb.h"
+#include "Item.h"
+#include "Candle.h"
 class Game
 { 
 public:
@@ -18,6 +20,9 @@ private:
 	bool checkCollision(sf::FloatRect first, sf::FloatRect second);
 	void playerWallCollision(bool x_y);
 	void cobbWallCollision(bool x_y);
+	void spawnItems();
+	void drawItems();
+	void updateItems(float dt);
 private:
 	sf::Vector2f windowSize;
 	sf::RenderWindow window;
@@ -27,6 +32,9 @@ private:
 	std::unique_ptr<Player> player;
 	std::unique_ptr<Map> map;
 	std::unique_ptr<Cobb> cobb;
+
+	std::vector<std::unique_ptr<Item>> items;
+
 	//resourceHolder(texture)
 	ResourceHolder<TextureID, sf::Texture> textureHolder;
 };

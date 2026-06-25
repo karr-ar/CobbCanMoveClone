@@ -25,11 +25,13 @@ void Player::inputUpdate() {
 	if (sf::Keyboard::isKeyPressed(down)) {
 		direction.y += 1;
 	}
+	if (getDirection().x != 0 && getDirection().y != 0) direction = direction.normalized();
+
 	this->setDirection(direction);
 	
 }
 sf::Vector2f Player::update(float dt) {
-	spriteRowNo = 0;
+	spriteRowNo = -1;
 
 	sf::Vector2f position(this->getPosition());
 	sf::Vector2f offset = this->getDirection() * this->getVelocity() * dt;
@@ -57,8 +59,9 @@ sf::Vector2f Player::update(float dt) {
 	else if (this->getDirection().y < 0) {
 		spriteRowNo = 3;
 	}
-	
-	playerAnimation.update(spriteRowNo,dt);
+	if (spriteRowNo != -1) {
+		playerAnimation.update(spriteRowNo, dt);
+	}
 	playerSprite.setTextureRect(playerAnimation.getXyRect());
 	return offset;
 }
