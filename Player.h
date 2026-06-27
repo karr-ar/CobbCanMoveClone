@@ -1,12 +1,15 @@
 #pragma once
 #include "Animation.h"
 #include "Entity.h"
+#include "Item.h"
+#include "Candle.h"
+#include <memory>
 class Player :
     public Entity
 {
 public:
     Player(float velocity, sf::Vector2f position, sf::Vector2f direction,sf::Texture &texture, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right, 
-                                                                                                        sf::Keyboard::Scancode up, sf::Keyboard::Scancode down);
+                                                                                                        sf::Keyboard::Scancode up, sf::Keyboard::Scancode down, sf::Keyboard::Scancode equip);
     void setSprite(sf::Texture);
     void draw(sf::RenderWindow &window);
     sf::Vector2f update(float dt);
@@ -15,14 +18,22 @@ public:
     void setPosition(sf::Vector2f);
     void setPosition(float px, float py);
     void move(sf::Vector2f offset);
+    sf::Keyboard::Scancode getEquipButton();
+    
+    void equipItem(std::vector<std::unique_ptr<Item>>& items);
+    bool itemPlayerCollision(sf::Sprite itemSprite, sf::Sprite playerSprite);
+    void drawPlayersEquippedItem(sf::RenderWindow& window); // bcz this needs to be drawn after the player unlike other items
+
 private:
     sf::Sprite playerSprite;
     sf::Keyboard::Scancode left;
     sf::Keyboard::Scancode right;
     sf::Keyboard::Scancode up;
     sf::Keyboard::Scancode down;
+    sf::Keyboard::Scancode equip;
 
     Animation playerAnimation;
     int spriteRowNo;
-};
 
+    Item* itemEquipped =nullptr;
+};

@@ -13,7 +13,7 @@ void Cobb::setPosition(sf::Vector2f position) {
 }
 void Cobb::followTheGivenPosition(sf::Vector2f position) {
 	sf::Vector2f direction( position - getPosition());
-	if (getDirection().x != 0 && getDirection().y != 0) direction = direction.normalized();
+	if (direction.x != 0 && direction.y != 0) direction = direction.normalized();
 
 	// Create a 1.5 pixel tolerance zone
 	float deadzone = 4;

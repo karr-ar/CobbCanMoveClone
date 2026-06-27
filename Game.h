@@ -1,4 +1,6 @@
 #pragma once
+#include <iostream>
+
 #include<SFML//Graphics.hpp>
 #include "Player.h"
 #include "ResourceHolder.hpp"
@@ -23,6 +25,12 @@ private:
 	void spawnItems();
 	void drawItems();
 	void updateItems(float dt);
+
+	//for darkness
+	void spawnDarkness();
+
+	sf::Texture generateLightMask(int radius); 
+
 private:
 	sf::Vector2f windowSize;
 	sf::RenderWindow window;
@@ -34,6 +42,12 @@ private:
 	std::unique_ptr<Cobb> cobb;
 
 	std::vector<std::unique_ptr<Item>> items;
+
+
+	//for darkness
+	sf::RenderTexture lightMapTexture;
+	//std::vector<sf::Vector2f> darknessPockets;
+	sf::Texture lightMaskTexture;
 
 	//resourceHolder(texture)
 	ResourceHolder<TextureID, sf::Texture> textureHolder;
