@@ -78,8 +78,7 @@ void Game::inputUpdate() {
 	}
 	player->inputUpdate();
 	std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
-	//cobb->RandomMovement(cobbsAllowedPositions, rand() % cobbsAllowedPositions.size());
-	cobb->cobbCanSee(player->getPosition(),true);
+	cobb->chooseMovement(cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()]);
 }
 void Game::render() {
 	window.clear();
@@ -121,6 +120,14 @@ void Game::render() {
 		}
 	}
 
+	lightGlow.setScale(sf::Vector2f(1,1));
+	lightGlow.setPosition(player->getPosition());
+	lightMapTexture.draw(lightGlow, eraser);
+
+	lightGlow.setScale(sf::Vector2f(2, 2));
+	lightGlow.setPosition(cobb->getPosition());
+	lightMapTexture.draw(lightGlow, eraser);
+
 	lightMapTexture.display();
 	sf::Sprite lightMapSprite(lightMapTexture.getTexture());
 	window.setView(window.getDefaultView());
@@ -134,9 +141,18 @@ void Game::update(float dt) {
 	playerWallCollision(true);
 	player->move(sf::Vector2f(0, offsetPlayer.y));
 	playerWallCollision(false);
+
+	player->setVisibility(items);// constantlly checks for player being under the light source 
+	cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
+
+	workOnCobbCanHear();
+
 	cobb->move(sf::Vector2f(cobb->update(dt)));
+
 	updateItems(dt);
+
 	view.setCenter(player->getPosition());//for now the camera is rigid but ill fix it  later
+
 }
 //collision for player and walls
 bool Game::checkCollision(sf::FloatRect first, sf::FloatRect second) {
@@ -229,4 +245,23 @@ sf::Texture Game::generateLightMask(int radius) {
 		std::cout << "failed to convert image to texture";
 	}
 	return texture;
+}
+
+void Game::workOnCobbCanHear() {
+	for (int i = 0;i < items.size();i++) {
+		if (items[i]->getNoiseActive()) {
+			items[i]->setNoiseInactive();
+			if ((cobb->getPosition() - items[i]->getPosition()).length() <= items[i]->getCurrentNoiseRadius()) {
+				cobb->setCobbsHearingRetention();
+				cobb->setCobbsLastHeardPosition(items[i]->getPosition());
+				break;
+			}
+		}
+	}
+	if (player->getIsWalking()) {
+		if ((cobb->getPosition() - player->getPosition()).length() <= player->getPlayersWalkingNoiseRadius()) {
+			cobb->setCobbsHearingRetention();
+			cobb->setCobbsLastHeardPosition(player->getPosition());
+		}
+	}
 }

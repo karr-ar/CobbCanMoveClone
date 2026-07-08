@@ -11,9 +11,16 @@ sf::Vector2f Item::getPosition() {
 
 void Item::setEquipped() {
 	equipped = true;
+	//produce noise 
+	setNoiseActive();
+	currentNoiseRadius = equipNoiseRadius;
 }
 void Item::unequip() {
 	equipped = false;
+
+	//produce noise 
+	setNoiseActive();
+	currentNoiseRadius = equipNoiseRadius;
 }
 Item::Item(sf::Vector2f position, sf::Texture& texture) :itemSprite(texture) {
 	setPosition(position);
@@ -36,4 +43,17 @@ void Item::draw(sf::RenderWindow &window) {
 }
 bool Item::getEquipped() {
 	return equipped;
+}
+void Item::setNoiseActive() {
+	noiseActive = true;
+}
+void Item::setNoiseInactive() {
+	noiseActive = false;
+}
+
+float Item::getCurrentNoiseRadius() {
+	return currentNoiseRadius;
+}
+bool Item::getNoiseActive() {
+	return noiseActive;
 }

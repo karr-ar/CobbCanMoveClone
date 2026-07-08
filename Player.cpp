@@ -14,6 +14,9 @@ Player::Player(float velocity, sf::Vector2f position, sf::Vector2f direction, sf
 }
 void Player::inputUpdate() {
 	sf::Vector2f direction(0, 0);
+
+	isWalking = false;
+
 	if (sf::Keyboard::isKeyPressed(left)) {
 		direction.x += -1;
 	}
@@ -26,8 +29,10 @@ void Player::inputUpdate() {
 	if (sf::Keyboard::isKeyPressed(down)) {
 		direction.y += 1;
 	}
-	if (direction.x != 0 && direction.y != 0) direction = direction.normalized();
-
+	if (direction.x != 0 && direction.y != 0) {
+		direction = direction.normalized();
+		isWalking = true;
+	}
 	this->setDirection(direction);
 	
 }
@@ -119,4 +124,26 @@ sf::Keyboard::Scancode Player::getEquipButton() {
 void Player::drawPlayersEquippedItem(sf::RenderWindow& window) {
 	if(itemEquipped!=nullptr)
 	window.draw(itemEquipped->getSprite());
+}
+void Player::setVisibility(const std::vector<std::unique_ptr<Item>>& items) {
+	visible = false;
+	for (int i = 0;i < items.size();i++) {
+		Candle* candle = dynamic_cast<Candle*>(items[i].get());
+		if (candle != nullptr) {
+			float candleRad = candle->getLuminosityRadius();
+			if ((candle->getPosition() - this->getPosition()).lengthSquared() <= candleRad * candleRad) {
+				visible = true;
+				break;
+			}
+		}
+	}
+}
+bool Player::getVisibility() {
+	return visible;
+}
+bool Player::getIsWalking() {
+	return isWalking;
+}
+float Player::getPlayersWalkingNoiseRadius() {
+	return playersWalkingNoiseRadius;
 }

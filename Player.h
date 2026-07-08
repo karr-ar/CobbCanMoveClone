@@ -24,6 +24,12 @@ public:
     bool itemPlayerCollision(sf::Sprite itemSprite, sf::Sprite playerSprite);
     void drawPlayersEquippedItem(sf::RenderWindow& window); // bcz this needs to be drawn after the player unlike other items
 
+    void setVisibility(const std::vector<std::unique_ptr<Item>>& items);
+    bool getVisibility();
+
+    bool getIsWalking();
+    float getPlayersWalkingNoiseRadius();
+
 private:
     sf::Sprite playerSprite;
     sf::Keyboard::Scancode left;
@@ -36,4 +42,8 @@ private:
     int spriteRowNo;
 
     Item* itemEquipped =nullptr;
+    bool visible = false;
+
+    float playersWalkingNoiseRadius = 100000; //hardcoded for now
+    bool isWalking = false;
 };

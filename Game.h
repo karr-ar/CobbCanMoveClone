@@ -25,6 +25,9 @@ private:
 	void spawnItems();
 	void drawItems();
 	void updateItems(float dt);
+	bool calculateCobbCanSee();
+	
+	void workOnCobbCanHear();
 
 	//for darkness
 	void spawnDarkness();

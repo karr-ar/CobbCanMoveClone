@@ -6,6 +6,8 @@ Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 15 }, 0.1, s
 	cobbSprite.setOrigin(sf::Vector2f(cobbAnimation.getXyRect().size.x/2, cobbAnimation.getXyRect().size.y / 2));
 	cobbSprite.setScale(sf::Vector2f(2.5, 2.5));
 
+	cobbsVisualRadius = 500;
+
 }
 void Cobb::setPosition(sf::Vector2f position) {
 	Entity::setPosition(position);
@@ -27,9 +29,9 @@ void Cobb::followTheGivenPosition(sf::Vector2f position) {
 
 	this->setDirection(direction);
 }
-void Cobb::RandomMovement(std::vector <sf::Vector2f> cobbsAllowedPositions, int randomPosIndex) {
+void Cobb::RandomMovement(sf::Vector2f nextRandomPos) {
 	if (updateCobbsPosition) {
-		cobbsNewLocation = cobbsAllowedPositions[randomPosIndex];
+		cobbsNewLocation = nextRandomPos;
 
 		//sf::Vector2f direction(cobbsNewLocation - this->getPosition());
 		//direction = direction.normalized();
@@ -71,8 +73,46 @@ sf::Sprite Cobb::getCobbSprite() {
 void Cobb::UpdateCobbsPosition() {
 	updateCobbsPosition = true;
 }
-void Cobb::cobbCanSee(sf::Vector2f playersPosition, bool active) {
-	if (active) {
-		followTheGivenPosition(playersPosition);
+void Cobb::cobbCanSee() {
+		followTheGivenPosition(lastSeenPosition);
+		if ((this->getPosition() - lastSeenPosition).length() < 5) {
+			cobbsVisualRetention = false;
+	}
+}
+void Cobb::canCobbSeeThePlayer(sf::Vector2f playerPos, bool isPlayerVisible) {
+	if (((this)->getPosition() - (playerPos)).length() <= cobbsVisualRadius && isPlayerVisible) {
+		canCobbSee = true;
+		lastSeenPosition = playerPos;
+		cobbsVisualRetention = true;
+	}
+	else {
+		canCobbSee = false;
+	}
+}
+void Cobb::chooseMovement(sf::Vector2f nextRandomPos) {
+
+	if (canCobbSee || cobbsVisualRetention) {
+		this->setVelocity(270);
+		cobbCanSee();
+	}
+	else if (cobbsHearingRetention) {
+		this->setVelocity(270);
+		cobbFollowsLastHeardPosition();
+	}
+	else {
+		this->setVelocity(200);
+		RandomMovement(nextRandomPos);
+	}
+}
+void Cobb::setCobbsHearingRetention() {
+	cobbsHearingRetention = true;
+}
+void Cobb::setCobbsLastHeardPosition(sf::Vector2f lastHeardPosition) {
+	this->lastHeardPosition = lastHeardPosition;
+}
+void Cobb::cobbFollowsLastHeardPosition(){
+	followTheGivenPosition(lastHeardPosition);
+	if ((this->getPosition() - lastHeardPosition).length() < 5) {
+		cobbsHearingRetention = false;
 	}
 }
