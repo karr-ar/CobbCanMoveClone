@@ -1,6 +1,10 @@
 #pragma once
 #include <iostream>
 
+#include <fstream>
+#include <sstream>
+#include <string>
+
 #include<SFML//Graphics.hpp>
 #include "Player.h"
 #include "ResourceHolder.hpp"
@@ -26,6 +30,7 @@ private:
 	void drawItems();
 	void updateItems(float dt);
 	bool calculateCobbCanSee();
+	std::unordered_map <std::string, float> getConfigData(std::string filePath);
 	
 	void workOnCobbCanHear();
 
@@ -54,5 +59,8 @@ private:
 
 	//resourceHolder(texture)
 	ResourceHolder<TextureID, sf::Texture> textureHolder;
+
+	//config data
+	std::unordered_map <std::string, float> configData;
 };
 

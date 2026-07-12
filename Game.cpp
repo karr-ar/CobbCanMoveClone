@@ -14,10 +14,27 @@ void Game::createWindow(sf::Vector2f windowSize,std::string windowTitle) {
 	window.create(vm,windowTitle);
 }
 Game::Game() {
+
+	//load Config Data
+	configData = getConfigData("sprites/config/config_file.txt");
+
+	float cobbsNormalSpeed = configData.count("cobbs_normal_speed") ? configData["cobbs_normal_speed"] : 0;
+	float cobbsInvestigationSpeed = configData.count("cobbs_investigation_speed") ? configData["cobbs_investigation_speed"] : 0;
+	float cobbsChasingSpeed = configData.count("cobbs_chasing_speed") ? configData["cobbs_chasing_speed"] : 0;
+	float cobbScaledBy = configData.count("cobbs_scaled_by") ? configData["cobbs_scaled_by"] : 0;
+	float cobbsVisualRadius = configData.count("cobbs_visual_radius") ? configData["cobbs_visual_radius"] : 0;
+
+	float playerSpeed = configData.count("players_speed") ? configData["players_speed"] : 0;
+	float playerWalkingNoiseRadius = configData.count("players_walking_noise_radius") ? configData["players_walking_noise_radius"] : 0;
+
+	float windowSizeX= configData.count("window_size_x") ? configData["window_size_x"] : 0;
+	float windowSizeY = configData.count("window_size_y") ? configData["window_size_y"] : 0;
+
+	float radiusOfLightMaskTexture = configData.count("radius_of_lightMaskTexture") ? configData["radius_of_lightMaskTexture"] : 0;
 	
 	//window init
-	windowSize.x = 1920;
-	windowSize.y = 1080;
+	windowSize.x = windowSizeX;
+	windowSize.y = windowSizeY;
 	std::string title = "CobbCanMoveClone";
 	createWindow(windowSize, title);
 
@@ -41,11 +58,11 @@ Game::Game() {
 	sf::Vector2f cobbInitialLoc = map->getCobbInitialPosition();
 	
 	//Player Initialization
-	player = std::make_unique<Player>(300,playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),
+	player = std::make_unique<Player>(playerSpeed,playerInitialLoc, sf::Vector2f(0,0),textureHolder.get(TextureID::Player),playerWalkingNoiseRadius,
 		sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S, sf::Keyboard::Scancode::E);
 
 	//cobb Initialize
-	cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), 250, cobbInitialLoc ,sf::Vector2f(0,0));  
+	cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed,cobbsInvestigationSpeed, cobbsChasingSpeed,cobbInitialLoc ,sf::Vector2f(0,0),cobbScaledBy,cobbsVisualRadius);
 	
 	//spawn the items
 	spawnItems();
@@ -57,8 +74,9 @@ Game::Game() {
 	if (!lightMapTexture.resize(sf::Vector2u(windowSize.x, windowSize.y))) {
 		std::cout << "Critical Error: Failed to create lightmap texture!" << std::endl;
 	}
-	lightMaskTexture = generateLightMask(70);
+	lightMaskTexture = generateLightMask(radiusOfLightMaskTexture);
 //	spawnDarkness();
+
 }
 void Game::inputUpdate() {
 	while (const std::optional<sf::Event> event = window.pollEvent()) {
@@ -90,7 +108,10 @@ void Game::render() {
 	cobb->draw(window);
 
 	//lightMapTexture.clear(sf::Color(0, 0, 0, 0));
-	lightMapTexture.clear(sf::Color(0, 0, 0, 245));
+
+	float darknessLevel = configData.count("amount_of_darkness(range[0-255])") ? configData["amount_of_darkness(range[0-255])"] : 0;
+
+	lightMapTexture.clear(sf::Color(0, 0, 0, darknessLevel));
 	lightMapTexture.setView(view);
 
 	//sf::CircleShape darknessCloud(100);
@@ -110,21 +131,27 @@ void Game::render() {
 	sf::Sprite lightGlow(lightMaskTexture);
 	lightGlow.setOrigin(sf::Vector2f(lightMaskTexture.getSize().x / 2, lightMaskTexture.getSize().y / 2));
 
+	float radiusOfLightMaskTexture = configData.count("radius_of_lightMaskTexture") ? configData["radius_of_lightMaskTexture"] : 0;
+
 	for (int i = 0;i < items.size();i++) {
 		Candle* candle = dynamic_cast<Candle*>(items[i].get());
 		if (candle != nullptr) {
-			float scaleFactor = candle->getLuminosityRadius() / 70; //here 70 is the radius passed to sf::Texture generateLightMask(int radius); 
+			float scaleFactor = candle->getLuminosityRadius() / radiusOfLightMaskTexture; 
 			lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
 			lightGlow.setPosition(candle->getPosition());
 			lightMapTexture.draw(lightGlow,eraser);
 		}
 	}
 
-	lightGlow.setScale(sf::Vector2f(1,1));
+	float playerGlowRadius = configData.count("players_glow_radius") ? configData["players_glow_radius"] : 0;
+	float scaleFactor = playerGlowRadius / radiusOfLightMaskTexture;
+	lightGlow.setScale(sf::Vector2f(scaleFactor,scaleFactor));
 	lightGlow.setPosition(player->getPosition());
 	lightMapTexture.draw(lightGlow, eraser);
 
-	lightGlow.setScale(sf::Vector2f(2, 2));
+	float cobbGlowRadius = configData.count("cobbs_glow_radius") ? configData["cobbs_glow_radius"] : 0;
+	float scaleFactor2 = cobbGlowRadius / radiusOfLightMaskTexture;
+	lightGlow.setScale(sf::Vector2f(scaleFactor2, scaleFactor2));
 	lightGlow.setPosition(cobb->getPosition());
 	lightMapTexture.draw(lightGlow, eraser);
 
@@ -192,10 +219,18 @@ void Game::playerWallCollision(bool x_y) {    // true for x and false for y
 }
 void Game::spawnItems() {
 	std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
+	float generalItemsEquipNoiseRadius = configData.count("items_equip_noise_radius") ? configData["items_equip_noise_radius"] : 0;
+	float generalItemsUnEquipNoiseRadius = configData.count("items_unequip_noise_radius") ? configData["items_unequip_noise_radius"] : 0;
+	float luminosity_radius = configData.count("luminosity_radius") ? configData["luminosity_radius"] : 0;
+
 	//spawning candles 
-	int no_of_candles = 16;
-	for (int i = 0;i < 16;i++) {
-		items.push_back(std::make_unique<Candle>(550,25, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()],textureHolder.get(TextureID::Candle)));   //hard coding for now
+	int no_of_candles = configData.count("number_of_candles") ? static_cast<int>(configData["number_of_candles"]) : 0;
+	float candles_luminosity_radius = configData.count("candles_luminosity_radius") ? configData["candles_luminosity_radius"] : 0;
+	
+
+	for (int i = 0;i < no_of_candles;i++) {
+		items.push_back(std::make_unique<Candle>(candles_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()],textureHolder.get(TextureID::Candle),generalItemsEquipNoiseRadius
+																																				,generalItemsUnEquipNoiseRadius));  
 	}
 	//spawning rocks
 }
@@ -264,4 +299,25 @@ void Game::workOnCobbCanHear() {
 			cobb->setCobbsLastHeardPosition(player->getPosition());
 		}
 	}
+}
+
+std::unordered_map <std::string, float> Game::getConfigData(std::string filePath) {
+	std::unordered_map <std::string, float> configData;
+	std::ifstream configFile(filePath);
+
+	if(!configFile.is_open()){
+		std::cerr << "Error: Could not open config file: " << filePath << "\n";
+		return configData; // Returns empty map if file missing	
+	}
+
+	std::string line;
+	while (std::getline( configFile, line)) {
+		std::stringstream ss(line);
+		std::string key;
+		float value;
+		if (ss >> key >> value) {
+			configData[key] = value;
+		}
+	}
+	return configData;
 }

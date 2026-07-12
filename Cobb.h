@@ -11,7 +11,6 @@ class Cobb :
     sf::Vector2f previousPosition;
     bool updateCobbsPosition = true;
     sf::Vector2f cobbsNewLocation;
-    float cobbsVisualRadius;
     bool canCobbSee = false;                    // this is to help with make him follow , it doesnt help if level has turned this ability off , gotta work for that seperately
     sf::Vector2f lastSeenPosition;
     bool cobbsVisualRetention = false;
@@ -19,8 +18,13 @@ class Cobb :
     sf::Vector2f lastHeardPosition;
     bool cobbsHearingRetention = false;
 
+    float cobbInvestigationSpeed;
+    float cobbChasingSpeed;
+    float cobbScaledBy;
+    float cobbsVisualRadius;
+
 public:
-    Cobb(sf::Texture &cobbTexture, float velocity, sf::Vector2f position, sf::Vector2f direction);
+    Cobb(sf::Texture &cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction, float cobbScaledBy, float cobbsVisualRadius);
     void setSprite(sf::Texture cobbTexture);
     sf::Vector2f update(float dt);
     void draw(sf::RenderWindow& window);

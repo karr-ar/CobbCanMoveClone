@@ -1,12 +1,16 @@
 #include "Cobb.h"
 #include <iostream>
-Cobb::Cobb(sf::Texture& cobbTexture, float velocity, sf::Vector2f position, sf::Vector2f direction) :cobbSprite(cobbTexture),
+Cobb::Cobb(sf::Texture& cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction,float cobbScaledBy, float cobbsVisualRadius) :cobbSprite(cobbTexture),
 Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 15 }, 0.1, sf::Vector2u(15, 1)) {
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
 	cobbSprite.setOrigin(sf::Vector2f(cobbAnimation.getXyRect().size.x/2, cobbAnimation.getXyRect().size.y / 2));
 	cobbSprite.setScale(sf::Vector2f(2.5, 2.5));
 
-	cobbsVisualRadius = 500;
+
+	this->cobbChasingSpeed = cobbChasingSpeed;
+	this->cobbInvestigationSpeed= cobbInvestigationSpeed;
+	this->cobbScaledBy= cobbScaledBy;   //when cobb is chasing is enabled it gets bigger 
+	this->cobbsVisualRadius = cobbsVisualRadius;
 
 }
 void Cobb::setPosition(sf::Vector2f position) {
@@ -92,15 +96,15 @@ void Cobb::canCobbSeeThePlayer(sf::Vector2f playerPos, bool isPlayerVisible) {
 void Cobb::chooseMovement(sf::Vector2f nextRandomPos) {
 
 	if (canCobbSee || cobbsVisualRetention) {
-		this->setVelocity(270);
+		this->setVelocity(cobbChasingSpeed);
 		cobbCanSee();
 	}
 	else if (cobbsHearingRetention) {
-		this->setVelocity(270);
+		this->setVelocity(cobbChasingSpeed);
 		cobbFollowsLastHeardPosition();
 	}
 	else {
-		this->setVelocity(200);
+		this->setVelocity(getVelocity());
 		RandomMovement(nextRandomPos);
 	}
 }

@@ -8,7 +8,7 @@ class Player :
     public Entity
 {
 public:
-    Player(float velocity, sf::Vector2f position, sf::Vector2f direction,sf::Texture &texture, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right, 
+    Player(float velocity, sf::Vector2f position, sf::Vector2f direction,sf::Texture &texture, float playersWalkingNoiseRadius, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
                                                                                                         sf::Keyboard::Scancode up, sf::Keyboard::Scancode down, sf::Keyboard::Scancode equip);
     void setSprite(sf::Texture);
     void draw(sf::RenderWindow &window);
@@ -44,6 +44,6 @@ private:
     Item* itemEquipped =nullptr;
     bool visible = false;
 
-    float playersWalkingNoiseRadius = 100000; //hardcoded for now
+    float playersWalkingNoiseRadius;
     bool isWalking = false;
 };

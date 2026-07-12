@@ -1,5 +1,5 @@
 #include "Player.h"
-Player::Player(float velocity, sf::Vector2f position, sf::Vector2f direction, sf::Texture& texture, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
+Player::Player(float velocity, sf::Vector2f position, sf::Vector2f direction, sf::Texture& texture, float playersWalkingNoiseRadius, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
 	sf::Keyboard::Scancode up, sf::Keyboard::Scancode down , sf::Keyboard::Scancode equip) : Entity(velocity, position, direction), playerSprite(texture), playerAnimation(texture, { 6,6,6,6,6,6,6,6 }, 0.1, sf::Vector2u(6, 8)) {
 	
 	playerSprite.setOrigin(sf::Vector2f(playerAnimation.getXyRect().size.x/2, playerAnimation.getXyRect().size.y / 2));
@@ -11,6 +11,8 @@ Player::Player(float velocity, sf::Vector2f position, sf::Vector2f direction, sf
 	this->up = up;
 	this->down = down;
 	this->equip = equip;
+
+	this->playersWalkingNoiseRadius = playersWalkingNoiseRadius;
 }
 void Player::inputUpdate() {
 	sf::Vector2f direction(0, 0);
@@ -29,7 +31,7 @@ void Player::inputUpdate() {
 	if (sf::Keyboard::isKeyPressed(down)) {
 		direction.y += 1;
 	}
-	if (direction.x != 0 && direction.y != 0) {
+	if (direction.x != 0 || direction.y != 0) {
 		direction = direction.normalized();
 		isWalking = true;
 	}

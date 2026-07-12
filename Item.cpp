@@ -22,9 +22,13 @@ void Item::unequip() {
 	setNoiseActive();
 	currentNoiseRadius = equipNoiseRadius;
 }
-Item::Item(sf::Vector2f position, sf::Texture& texture) :itemSprite(texture) {
+Item::Item(float luminosityRadius,sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius, float unequipNoiseRadius) :itemSprite(texture) {
+	this->luminosityRadius = luminosityRadius;
 	setPosition(position);
 	itemSprite.setOrigin(sf::Vector2f(texture.getSize().x/2, texture.getSize().y / 2));
+
+	this->equipNoiseRadius = equipNoiseRadius;
+	this->unequipNoiseRadius = unequipNoiseRadius;
 }
 sf::Sprite& Item::getSprite() {
 	return itemSprite;
@@ -56,4 +60,8 @@ float Item::getCurrentNoiseRadius() {
 }
 bool Item::getNoiseActive() {
 	return noiseActive;
+}
+
+float Item::getLuminosityRadius() {
+	return luminosityRadius;
 }
