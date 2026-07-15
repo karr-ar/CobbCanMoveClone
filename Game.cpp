@@ -25,7 +25,7 @@ Game::Game() {
 	textureHolder.load(TextureID::Tile, "sprites/graphics/floor_light.PNG");
 	textureHolder.load(TextureID::Cobb, "sprites/graphics/cobb.png");
 	textureHolder.load(TextureID::Candle, "sprites/graphics/candle_spritesheet.png");
-	textureHolder.load(TextureID::Stone, "sprites/graphics/wall_left.PNG");
+	textureHolder.load(TextureID::Stone, "sprites/graphics/stone_break_spritesheet.PNG");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)
@@ -38,6 +38,7 @@ Game::Game() {
 void Game::run() {
 	sf::Clock clock;
 	srand((int)time(0));
+	//
 	while (window.isOpen()) {
 		while (const std::optional<sf::Event> event = window.pollEvent()) {
 			if (event->is<sf::Event::Closed>()) {
@@ -46,8 +47,11 @@ void Game::run() {
 			currentState->handleEvent(*event, window); // forward everything else down
 		}
 		currentState->handleInputs();
+		//
 		sf::Time dt = clock.restart();
 		currentState->update(dt.asSeconds());
+
+		//
 		currentState->render(window);
 	}
 }

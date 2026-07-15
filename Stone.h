@@ -1,5 +1,6 @@
 #pragma once
 #include "Item.h"
+#include "Animation.h"
 class Stone :
     public Item
 {
@@ -14,7 +15,12 @@ private:
     bool onAir = false;
     bool ReadyForDestructionNoise = false;
 
-    int horizontalDirection = 1;
+    int horizontalDirection = -1;
+
+    Animation stoneDestructionAnimation;
+    bool displayDestructionAnimation = false;
+    float destructionTimer = 0.5f;
+    bool deleteStone = false;
 
 public:
     Stone(float luminosityRadius, sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius, float unequipNoiseRadius , 
@@ -24,5 +30,6 @@ public:
     void setJump();
     void unequip() override;
     void setHorizontalDirection(int x);
+    bool getDeleteStone();
 };
 

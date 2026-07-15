@@ -5,6 +5,7 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
                                         ResourceHolder<TextureID, sf::Texture>& textureHolder)
     : configData(config), windowSize(winSize) ,  textureHolder(textureHolder)
 {
+    //load Config Data
     float cobbsNormalSpeed = configData.count("cobbs_normal_speed") ? configData["cobbs_normal_speed"] : 0;
     float cobbsInvestigationSpeed = configData.count("cobbs_investigation_speed") ? configData["cobbs_investigation_speed"] : 0;
     float cobbsChasingSpeed = configData.count("cobbs_chasing_speed") ? configData["cobbs_chasing_speed"] : 0;
@@ -19,12 +20,16 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
     // Map initialization
     map = std::make_unique<Map>("sprites/graphics/map.txt", textureHolder.get(TextureID::Wall), textureHolder.get(TextureID::Tile));  //hardcoded for now
 
+    
     sf::Vector2f playerInitialLoc = map->getPlayerInitialPosition();
+
     sf::Vector2f cobbInitialLoc = map->getCobbInitialPosition();
 
+    //Player Initialization
     player = std::make_unique<Player>(playerSpeed, playerInitialLoc, sf::Vector2f(0, 0), textureHolder.get(TextureID::Player), playerWalkingNoiseRadius,
         sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S, sf::Keyboard::Scancode::E);
 
+    //cobb Initialize
     cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius);
 
     spawnItems();
@@ -61,7 +66,7 @@ void PlayingState::update(float dt) {
     player->move(sf::Vector2f(0, offsetPlayer.y));
     playerWallCollision(false);
 
-    player->setVisibility(items);
+    player->setVisibility(items); // constantlly checks for player being under the light source
     cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
 
     workOnCobbCanHear();
@@ -69,8 +74,9 @@ void PlayingState::update(float dt) {
     cobb->move(sf::Vector2f(cobb->update(dt)));
 
     updateItems(dt);
+    deleteStones();
 
-    view.setCenter(player->getPosition());
+    view.setCenter(player->getPosition()); //for now the camera is rigid but ill fix it  later
 }
 
 void PlayingState::render(sf::RenderWindow& window) {
@@ -85,6 +91,17 @@ void PlayingState::render(sf::RenderWindow& window) {
     float darknessLevel = configData.count("amount_of_darkness(range[0-255])") ? configData["amount_of_darkness(range[0-255])"] : 0;
     lightMapTexture.clear(sf::Color(0, 0, 0, darknessLevel));
     lightMapTexture.setView(view);
+
+
+    //sf::CircleShape darknessCloud(100);
+    //darknessCloud.setOrigin(sf::Vector2f(350, 350));
+    //darknessCloud.setFillColor(sf::Color(0, 0, 0, 245));
+
+    //for (const auto& darkPos : darknessPockets) {
+    //	darknessCloud.setPosition(darkPos);
+    //	lightMapTexture.draw(darknessCloud);
+    //}
+
 
     sf::BlendMode eraserblend(sf::BlendMode::Factor::Zero, sf::BlendMode::Factor::OneMinusSrcAlpha, sf::BlendMode::Equation::Add,
         sf::BlendMode::Factor::Zero, sf::BlendMode::Factor::OneMinusSrcAlpha, sf::BlendMode::Equation::Add);
@@ -140,7 +157,7 @@ bool PlayingState::checkCollision(sf::FloatRect first, sf::FloatRect second) {
     return first.findIntersection(second).has_value();
 }
 
-void PlayingState::playerWallCollision(bool x_y) {
+void PlayingState::playerWallCollision(bool x_y) { // true for x and false for y
     std::vector<sf::Vector2f> walls = map->getWalls();
     sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
     for (int i = 0; i < walls.size(); i++) {
@@ -165,12 +182,22 @@ void PlayingState::playerWallCollision(bool x_y) {
     }
 }
 
+//void Game::spawnDarkness() {
+//	std::vector<sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
+//
+//	int number_of_dark_zones = 24; // Adjust to make the game harder/easier
+//	for (int i = 0; i < number_of_dark_zones; i++) {
+//		sf::Vector2f randomPos = cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()];
+//		darknessPockets.push_back(randomPos);
+//	}
+
 void PlayingState::spawnItems() {
     std::vector<sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
     float generalItemsEquipNoiseRadius = configData.count("items_equip_noise_radius") ? configData["items_equip_noise_radius"] : 0;
     float generalItemsUnEquipNoiseRadius = configData.count("items_unequip_noise_radius") ? configData["items_unequip_noise_radius"] : 0;
     float general_item_luminosity_radius = configData.count("luminosity_radius") ? configData["luminosity_radius"] : 0;
 
+    //spawning candles 
     int no_of_candles = configData.count("number_of_candles") ? static_cast<int>(configData["number_of_candles"]) : 0;
     float candles_luminosity_radius = configData.count("candles_luminosity_radius") ? configData["candles_luminosity_radius"] : 0;
 
@@ -178,6 +205,7 @@ void PlayingState::spawnItems() {
         items.push_back(std::make_unique<Candle>(candles_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Candle), generalItemsEquipNoiseRadius, generalItemsUnEquipNoiseRadius));
     }
 
+    //spawning rocks
     int no_of_rocks = configData.count("number_of_rocks") ? static_cast<int>(configData["number_of_rocks"]) : 0;
     float stones_unequip_noise_radius = configData.count("stones_unequip_noise_radius") ? configData["stones_unequip_noise_radius"] : 0;
     float stones_initial_upward_velocity = configData.count("stones_initial_upward_velocity") ? configData["stones_initial_upward_velocity"] : 0;
@@ -242,6 +270,18 @@ void PlayingState::workOnCobbCanHear() {
         if ((cobb->getPosition() - player->getPosition()).length() <= player->getPlayersWalkingNoiseRadius()) {
             cobb->setCobbsHearingRetention();
             cobb->setCobbsLastHeardPosition(player->getPosition());
+        }
+    }
+}
+void PlayingState::deleteStones() {
+    for (int i = 0;i < items.size();i++) {
+        Stone* stone = dynamic_cast<Stone*>(items[i].get());
+        if (stone != nullptr) {
+            if (stone->getDeleteStone()) {
+                items[i].release();
+                items.erase(items.begin()+i);
+                i--;
+            }
         }
     }
 }

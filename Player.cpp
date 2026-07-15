@@ -71,7 +71,9 @@ sf::Vector2f Player::update(float dt) {
 		playerAnimation.update(spriteRowNo, dt);
 	}
 	playerSprite.setTextureRect(playerAnimation.getXyRect());
-	
+
+	setDirectionOfStoneHeldByPlayer();
+
 	return offset;
 }
 void Player::draw(sf::RenderWindow& window) {
@@ -152,10 +154,10 @@ float Player::getPlayersWalkingNoiseRadius() {
 void Player::setDirectionOfStoneHeldByPlayer() {
 	Stone* stone = dynamic_cast<Stone*>(itemEquipped);
 	if (stone != nullptr) {
-		if (getDirection().x == 1) {
+		if (getDirection().x > 0) {
 			stone->setHorizontalDirection(1);
 		}
-		if (getDirection().x == -1) {
+		if (getDirection().x < 0) {
 			stone->setHorizontalDirection(-1);
 		}
 	}

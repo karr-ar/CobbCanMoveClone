@@ -1,6 +1,9 @@
 #include "Stone.h"
 Stone::Stone(float luminosityRadius, sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius,
-	float unequipNoiseRadius,  float initialUpwardVelocity, float downwardAcceleration, float horizontalVelocity) :Item(luminosityRadius,position,texture,equipNoiseRadius,unequipNoiseRadius){
+	float unequipNoiseRadius,  float initialUpwardVelocity, float downwardAcceleration, float horizontalVelocity) :Item(luminosityRadius,position,texture,equipNoiseRadius,unequipNoiseRadius),
+																												stoneDestructionAnimation(texture,{5},0.1,sf::Vector2u(5,1)) {
+	getSprite().setOrigin(sf::Vector2f(stoneDestructionAnimation.getXyRect().size.x / 2, stoneDestructionAnimation.getXyRect().size.x / 2));
+	getSprite().setTextureRect(stoneDestructionAnimation.getXyRect());
 
 	this->initialUpwardVelocity = initialUpwardVelocity;
 	this->downwardAcceleration = downwardAcceleration;
@@ -10,6 +13,7 @@ void Stone::jump() {
 	if (onAir && UpwardVelocity <= 0.0f && getPosition().y >= unequipLocation.y) {
 		UpwardVelocity = 0;
 		onAir = false;
+		displayDestructionAnimation = true;
 		if (ReadyForDestructionNoise) {
 			produceUnEquipNoise();
 			ReadyForDestructionNoise = false;
@@ -36,6 +40,15 @@ void Stone::update(float dt, sf::Vector2f playerPosition) {
 
 		setPosition(currPosition);
 	}
+	if (displayDestructionAnimation) {
+		stoneDestructionAnimation.update(0, dt);
+		getSprite().setTextureRect(stoneDestructionAnimation.getXyRect());
+		destructionTimer -= dt;
+		if (destructionTimer <= 0) {
+			deleteStone = true;
+			displayDestructionAnimation = false;
+		}
+	}
 }
 void Stone::unequip() {
 	//dont call item class's unequip!
@@ -49,4 +62,7 @@ void Stone::unequip() {
 }
 void Stone::setHorizontalDirection(int x) {
 	horizontalDirection = x;
+}
+bool Stone::getDeleteStone() {
+	return deleteStone;
 }

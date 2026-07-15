@@ -27,6 +27,7 @@ private:
     bool calculateCobbCanSee();
     void workOnCobbCanHear();
     sf::Texture generateLightMask(int radius);
+    void deleteStones();
 
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
@@ -39,6 +40,7 @@ private:
     std::vector<std::unique_ptr<Item>> items;
 
     sf::RenderTexture lightMapTexture;
+    //std::vector<sf::Vector2f> darknessPockets;
     sf::Texture lightMaskTexture;
 
     ResourceHolder<TextureID, sf::Texture>& textureHolder;
