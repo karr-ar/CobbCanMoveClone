@@ -149,3 +149,14 @@ bool Player::getIsWalking() {
 float Player::getPlayersWalkingNoiseRadius() {
 	return playersWalkingNoiseRadius;
 }
+void Player::setDirectionOfStoneHeldByPlayer() {
+	Stone* stone = dynamic_cast<Stone*>(itemEquipped);
+	if (stone != nullptr) {
+		if (getDirection().x == 1) {
+			stone->setHorizontalDirection(1);
+		}
+		if (getDirection().x == -1) {
+			stone->setHorizontalDirection(-1);
+		}
+	}
+}

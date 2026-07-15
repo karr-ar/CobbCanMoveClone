@@ -4,6 +4,8 @@
 #include "Item.h"
 #include "Candle.h"
 #include <memory>
+#include "Stone.h"
+
 class Player :
     public Entity
 {
@@ -29,6 +31,8 @@ public:
 
     bool getIsWalking();
     float getPlayersWalkingNoiseRadius();
+
+    void setDirectionOfStoneHeldByPlayer();
 
 private:
     sf::Sprite playerSprite;

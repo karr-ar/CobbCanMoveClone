@@ -1,4 +1,4 @@
-luminosity_radius 50
+luminosity_radius 70
 candles_luminosity_radius 200 
 players_glow_radius 70
 cobbs_glow_radius 140
@@ -13,6 +13,11 @@ cobbs_visual_radius 500
 items_equip_noise_radius 500
 items_unequip_noise_radius 500
 players_walking_noise_radius 200
-amount_of_darkness(range[0-255]) 245 
+amount_of_darkness(range[0-255]) 245
+number_of_rocks 16
+stones_unequip_noise_radius 9999999999
+stones_initial_upward_velocity 1500
+stones_downward_acceleration -2500
+stones_horizontal_velocity 500 
 cobbs_investigation_speed 120
 cobbs_scaled_by 2 

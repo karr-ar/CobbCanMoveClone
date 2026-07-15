@@ -13,13 +13,14 @@
 #include "Cobb.h"
 #include "Item.h"
 #include "Candle.h"
+#include "Stone.h"
 class Game
 { 
 public:
 	void run();
 	Game();
 private:
-	void inputUpdate();
+	void handleInputs();
 	void update(float dt);
 	void render();
 	void createWindow(sf::Vector2f windowSize, std::string windowTitle);

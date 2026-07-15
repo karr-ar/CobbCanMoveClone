@@ -3,7 +3,7 @@ void Game::run() {
 	sf::Clock clock;
 	srand((int)time(0));
 	while (window.isOpen()) {
-		inputUpdate();
+		handleInputs();
 		sf::Time dt = clock.restart();
 		update(dt.asSeconds());
 		render();
@@ -44,6 +44,7 @@ Game::Game() {
 	textureHolder.load(TextureID::Tile, "sprites/graphics/floor_light.PNG");
 	textureHolder.load(TextureID::Cobb, "sprites/graphics/cobb.png");
 	textureHolder.load(TextureID::Candle, "sprites/graphics/candle_spritesheet.png");
+	textureHolder.load(TextureID::Stone, "sprites/graphics/wall_left.PNG");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)
@@ -78,7 +79,7 @@ Game::Game() {
 //	spawnDarkness();
 
 }
-void Game::inputUpdate() {
+void Game::handleInputs() {
 	while (const std::optional<sf::Event> event = window.pollEvent()) {
 		if (event->is<sf::Event::Closed>()) {
 			window.close();
@@ -140,6 +141,16 @@ void Game::render() {
 			lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
 			lightGlow.setPosition(candle->getPosition());
 			lightMapTexture.draw(lightGlow,eraser);
+		}
+	}
+
+	for (int i = 0;i < items.size();i++) {
+		Stone* stone = dynamic_cast<Stone*>(items[i].get());
+		if (stone != nullptr) {
+			float scaleFactor = stone->getLuminosityRadius() / radiusOfLightMaskTexture;
+			lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
+			lightGlow.setPosition(stone->getPosition());
+			lightMapTexture.draw(lightGlow, eraser);
 		}
 	}
 
@@ -221,7 +232,7 @@ void Game::spawnItems() {
 	std::vector <sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
 	float generalItemsEquipNoiseRadius = configData.count("items_equip_noise_radius") ? configData["items_equip_noise_radius"] : 0;
 	float generalItemsUnEquipNoiseRadius = configData.count("items_unequip_noise_radius") ? configData["items_unequip_noise_radius"] : 0;
-	float luminosity_radius = configData.count("luminosity_radius") ? configData["luminosity_radius"] : 0;
+	float general_item_luminosity_radius = configData.count("luminosity_radius") ? configData["luminosity_radius"] :0;
 
 	//spawning candles 
 	int no_of_candles = configData.count("number_of_candles") ? static_cast<int>(configData["number_of_candles"]) : 0;
@@ -233,6 +244,16 @@ void Game::spawnItems() {
 																																				,generalItemsUnEquipNoiseRadius));  
 	}
 	//spawning rocks
+	int no_of_rocks = configData.count("number_of_rocks") ? static_cast<int>(configData["number_of_rocks"]) : 0;
+	float stones_unequip_noise_radius= configData.count("stones_unequip_noise_radius") ? configData["stones_unequip_noise_radius"] : 0;
+	float stones_initial_upward_velocity = configData.count("stones_initial_upward_velocity") ? configData["stones_initial_upward_velocity"] : 0;
+	float stones_downward_acceleration = configData.count("stones_downward_acceleration") ? configData["stones_downward_acceleration"] : 0;
+	float stones_horizontal_velocity = configData.count("stones_horizontal_velocity") ? configData["stones_horizontal_velocity"] : 0;
+
+	for (int i = 0;i < no_of_rocks;i++) {
+		items.push_back(std::make_unique<Stone>(general_item_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Stone), generalItemsEquipNoiseRadius
+			, stones_unequip_noise_radius, stones_initial_upward_velocity, stones_downward_acceleration , stones_horizontal_velocity));
+	}
 }
 void Game::drawItems() {  //draws everything except equipped item
 	for (int i = 0;i < items.size();i++) {

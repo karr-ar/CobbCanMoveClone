@@ -25,9 +25,9 @@ public:
 	void setEquipped();
 	sf::Vector2f getPosition();
 	sf::Sprite& getSprite();
-	void unequip();                      //to be overridden in stone class
 	void draw(sf::RenderWindow& window);
 	bool getEquipped();
+	void setUnEquipped();
 
 	float getLuminosityRadius();
 
@@ -35,8 +35,11 @@ public:
 	void setNoiseInactive();
 	float getCurrentNoiseRadius();
 	bool getNoiseActive();
+	void produceEquipNoise();
+	void produceUnEquipNoise();
 
 	virtual void update(float dt, sf::Vector2f playerPosition);
+	virtual void unequip();                      //overridden in stone class
 	
 };
 

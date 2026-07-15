@@ -1,6 +1,6 @@
 #pragma once
 
-enum class TextureID { Player, Cobb, Wall, Tile , Candle};
+enum class TextureID { Player, Cobb, Wall, Tile , Candle , Stone};
 
 enum class FontID {};
 
