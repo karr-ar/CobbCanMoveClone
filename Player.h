@@ -11,7 +11,7 @@ class Player :
 {
 public:
     Player(float velocity, sf::Vector2f position, sf::Vector2f direction,sf::Texture &texture, float playersWalkingNoiseRadius, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
-                                                                                                        sf::Keyboard::Scancode up, sf::Keyboard::Scancode down, sf::Keyboard::Scancode equip);
+                                                                                                        sf::Keyboard::Scancode up, sf::Keyboard::Scancode down, sf::Keyboard::Scancode equip , float escalatorSpeed);
     void setSprite(sf::Texture);
     void draw(sf::RenderWindow &window);
     sf::Vector2f update(float dt);
@@ -34,7 +34,11 @@ public:
 
     void setDirectionOfStoneHeldByPlayer();
 
+    void setIsOnEscalatorToTrue();
+
 private:
+    float playerInitialSpeed; // this will come from config file  this will remain constant unlike players actual speed that can change if player is on escalator that speed is handled in entity class
+
     sf::Sprite playerSprite;
     sf::Keyboard::Scancode left;
     sf::Keyboard::Scancode right;
@@ -50,4 +54,8 @@ private:
 
     float playersWalkingNoiseRadius;
     bool isWalking = false;
+
+    bool isOnEscalator = false;
+
+    float escalatorSpeed;
 };

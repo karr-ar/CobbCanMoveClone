@@ -17,17 +17,24 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
     float radiusOfLightMaskTexture = configData.count("radius_of_lightMaskTexture") ? configData["radius_of_lightMaskTexture"] : 0;
 
-    // Map initialization
-    map = std::make_unique<Map>("sprites/graphics/map.txt", textureHolder.get(TextureID::Wall), textureHolder.get(TextureID::Tile));  //hardcoded for now
+    float escalator_speed = configData.count("escalator_speed") ? configData["escalator_speed"] : 0;
 
-    
+    // Map initialization
+    map = std::make_unique<Map>("sprites/graphics/map.txt", textureHolder.get(TextureID::Wall), textureHolder.get(TextureID::Tile),   //hardcoded map path for now
+                               textureHolder.get(TextureID::Wall2), textureHolder.get(TextureID::Grass), textureHolder.get(TextureID::Escalator));  
+
+
+    //map just helped us create escalator at specified position it wont handle update logic and all for it
+    escalator = std::make_unique<std::vector <Escalator>>(map->getEscalator());
+
     sf::Vector2f playerInitialLoc = map->getPlayerInitialPosition();
 
     sf::Vector2f cobbInitialLoc = map->getCobbInitialPosition();
 
     //Player Initialization
     player = std::make_unique<Player>(playerSpeed, playerInitialLoc, sf::Vector2f(0, 0), textureHolder.get(TextureID::Player), playerWalkingNoiseRadius,
-        sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S, sf::Keyboard::Scancode::E);
+        sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S, sf::Keyboard::Scancode::E
+                                                                                                                   , escalator_speed);
 
     //cobb Initialize
     cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius);
@@ -73,6 +80,11 @@ void PlayingState::update(float dt) {
 
     cobb->move(sf::Vector2f(cobb->update(dt)));
 
+    //update escalators sprite
+    updateEscalator(dt);
+
+    escalatorMovesAnythingOnIt();
+
     updateItems(dt);
     deleteStones();
 
@@ -83,10 +95,12 @@ void PlayingState::render(sf::RenderWindow& window) {
     window.clear();
     window.setView(view);
     map->draw(window);
+    drawEscalator(window);
     drawItems(window);
     player->draw(window);
     player->drawPlayersEquippedItem(window);
     cobb->draw(window);
+    
 
     float darknessLevel = configData.count("amount_of_darkness(range[0-255])") ? configData["amount_of_darkness(range[0-255])"] : 0;
     lightMapTexture.clear(sf::Color(0, 0, 0, darknessLevel));
@@ -180,6 +194,28 @@ void PlayingState::playerWallCollision(bool x_y) { // true for x and false for y
             }
         }
     }
+    walls = map->getWalls2();
+    player->getPlayerSprite().getGlobalBounds();
+    for (int i = 0; i < walls.size(); i++) {
+        sf::FloatRect wallRect = map->getWallSprite().getGlobalBounds();
+        wallRect.position = walls[i] - sf::Vector2f(map->getWallSprite().getTexture().getSize().x / 2, map->getWallSprite().getTexture().getSize().y / 2);
+        if (checkCollision(playerRect, wallRect) && x_y) {
+            if (player->getDirection().x > 0) {
+                player->setPosition(player->getPosition().x - playerRect.findIntersection(wallRect)->size.x, player->getPosition().y);
+            }
+            else if (player->getDirection().x < 0) {
+                player->setPosition(player->getPosition().x + playerRect.findIntersection(wallRect)->size.x, player->getPosition().y);
+            }
+        }
+        if (checkCollision(playerRect, wallRect) && !x_y) {
+            if (player->getDirection().y > 0) {
+                player->setPosition(player->getPosition().x, player->getPosition().y - playerRect.findIntersection(wallRect)->size.y);
+            }
+            else if (player->getDirection().y < 0) {
+                player->setPosition(player->getPosition().x, player->getPosition().y + playerRect.findIntersection(wallRect)->size.y);
+            }
+        }
+    }
 }
 
 //void Game::spawnDarkness() {
@@ -192,6 +228,9 @@ void PlayingState::playerWallCollision(bool x_y) { // true for x and false for y
 //	}
 
 void PlayingState::spawnItems() {
+    float escalator_speed = configData.count("escalator_speed") ? configData["escalator_speed"] : 0;
+
+
     std::vector<sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
     float generalItemsEquipNoiseRadius = configData.count("items_equip_noise_radius") ? configData["items_equip_noise_radius"] : 0;
     float generalItemsUnEquipNoiseRadius = configData.count("items_unequip_noise_radius") ? configData["items_unequip_noise_radius"] : 0;
@@ -202,7 +241,7 @@ void PlayingState::spawnItems() {
     float candles_luminosity_radius = configData.count("candles_luminosity_radius") ? configData["candles_luminosity_radius"] : 0;
 
     for (int i = 0; i < no_of_candles; i++) {
-        items.push_back(std::make_unique<Candle>(candles_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Candle), generalItemsEquipNoiseRadius, generalItemsUnEquipNoiseRadius));
+        items.push_back(std::make_unique<Candle>(candles_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Candle), generalItemsEquipNoiseRadius, generalItemsUnEquipNoiseRadius,escalator_speed));
     }
 
     //spawning rocks
@@ -213,7 +252,7 @@ void PlayingState::spawnItems() {
     float stones_horizontal_velocity = configData.count("stones_horizontal_velocity") ? configData["stones_horizontal_velocity"] : 0;
 
     for (int i = 0; i < no_of_rocks; i++) {
-        items.push_back(std::make_unique<Stone>(general_item_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Stone), generalItemsEquipNoiseRadius, stones_unequip_noise_radius, stones_initial_upward_velocity, stones_downward_acceleration, stones_horizontal_velocity));
+        items.push_back(std::make_unique<Stone>(general_item_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Stone), generalItemsEquipNoiseRadius, stones_unequip_noise_radius, stones_initial_upward_velocity, stones_downward_acceleration, stones_horizontal_velocity, escalator_speed));
     }
 }
 
@@ -284,4 +323,36 @@ void PlayingState::deleteStones() {
             }
         }
     }
+}
+void PlayingState::updateEscalator(float dt) {
+    for (int i = 0;i < escalator->size();i++) {
+        escalator->at(i).update(dt);
+    }
+}
+void PlayingState::drawEscalator(sf::RenderWindow& window) {
+    for (int i = 0;i < escalator->size();i++) {
+        escalator->at(i).draw(window);
+    }
+}
+void PlayingState::escalatorMovesAnythingOnIt() {
+    for (int i = 0;i < items.size();i++) {
+        sf::FloatRect itemRect = items[i]->getSprite().getGlobalBounds();
+        itemRect.position = items[i]->getPosition();
+        for (int j = 0;j < escalator->size(); j++) {
+            sf::FloatRect escalatorRect = escalator->at(j).getSprite().getGlobalBounds();
+            if (checkCollision(itemRect, escalatorRect)) {
+                items[i]->setIsOnEscalatorToTrue();
+                break;
+            }
+        }
+    }
+    //collision for player
+        sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
+        for (int j = 0;j < escalator->size(); j++) {
+            sf::FloatRect escalatorRect = escalator->at(j).getSprite().getGlobalBounds();
+            if (checkCollision(playerRect, escalatorRect)) {
+                player->setIsOnEscalatorToTrue();
+                break;
+            }
+        }
 }

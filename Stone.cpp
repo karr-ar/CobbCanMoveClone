@@ -1,6 +1,6 @@
 #include "Stone.h"
 Stone::Stone(float luminosityRadius, sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius,
-	float unequipNoiseRadius,  float initialUpwardVelocity, float downwardAcceleration, float horizontalVelocity) :Item(luminosityRadius,position,texture,equipNoiseRadius,unequipNoiseRadius),
+	float unequipNoiseRadius,  float initialUpwardVelocity, float downwardAcceleration, float horizontalVelocity, float escalator_speed) :Item(luminosityRadius,position,texture,equipNoiseRadius,unequipNoiseRadius, escalator_speed),
 																												stoneDestructionAnimation(texture,{5},0.1,sf::Vector2u(5,1)) {
 	getSprite().setOrigin(sf::Vector2f(stoneDestructionAnimation.getXyRect().size.x / 2, stoneDestructionAnimation.getXyRect().size.x / 2));
 	getSprite().setTextureRect(stoneDestructionAnimation.getXyRect());

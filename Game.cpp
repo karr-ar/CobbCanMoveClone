@@ -26,6 +26,9 @@ Game::Game() {
 	textureHolder.load(TextureID::Cobb, "sprites/graphics/cobb.png");
 	textureHolder.load(TextureID::Candle, "sprites/graphics/candle_spritesheet.png");
 	textureHolder.load(TextureID::Stone, "sprites/graphics/stone_break_spritesheet.PNG");
+	textureHolder.load(TextureID::Wall2, "sprites/graphics/wall2.PNG");
+	textureHolder.load(TextureID::Grass, "sprites/graphics/grass.PNG");
+	textureHolder.load(TextureID::Escalator, "sprites/graphics/escalator.PNG");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)

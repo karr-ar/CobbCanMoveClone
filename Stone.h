@@ -24,7 +24,7 @@ private:
 
 public:
     Stone(float luminosityRadius, sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius, float unequipNoiseRadius , 
-        float initialUpwardVelocity, float downwardAcceleration, float horizontalVelocity);
+        float initialUpwardVelocity, float downwardAcceleration, float horizontalVelocity , float escalator_speed);
     void jump();
     void update(float dt ,sf::Vector2f playerPosition) override;
     void setJump();

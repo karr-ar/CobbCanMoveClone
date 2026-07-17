@@ -1,4 +1,5 @@
 #include "Item.h"
+#include <iostream>
 
 void Item::setPosition(sf::Vector2f position) {
 	this->position = position;
@@ -20,13 +21,14 @@ void Item::unequip() {
 	//produce noise 
 	produceUnEquipNoise();
 }
-Item::Item(float luminosityRadius,sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius, float unequipNoiseRadius) :itemSprite(texture) {
+Item::Item(float luminosityRadius,sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius, float unequipNoiseRadius, float escalatorSpeed) :itemSprite(texture) {
 	this->luminosityRadius = luminosityRadius;
 	setPosition(position);
 	itemSprite.setOrigin(sf::Vector2f(texture.getSize().x/2, texture.getSize().y / 2));
 
 	this->equipNoiseRadius = equipNoiseRadius;
 	this->unequipNoiseRadius = unequipNoiseRadius;
+	this->escalatorSpeed = escalatorSpeed;
 }
 sf::Sprite& Item::getSprite() {
 	return itemSprite;
@@ -38,6 +40,12 @@ void Item::update(float dt, sf::Vector2f playerPosition) {
 	}
 	else {
 		itemSprite.setScale(sf::Vector2f(1, 1));
+		
+		if (isOnEscalator ) {
+			position.y -= dt * escalatorSpeed;
+			isOnEscalator = false;
+			setPosition(position);  //this will set sprite position aswell
+		}
 	}
 }
 void Item::draw(sf::RenderWindow &window) {
@@ -73,4 +81,7 @@ void Item::produceEquipNoise() {
 void Item::produceUnEquipNoise() {
 	setNoiseActive();
 	currentNoiseRadius = unequipNoiseRadius;
+}
+void Item::setIsOnEscalatorToTrue() {
+	isOnEscalator = true;
 }

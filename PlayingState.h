@@ -29,6 +29,10 @@ private:
     sf::Texture generateLightMask(int radius);
     void deleteStones();
 
+    void updateEscalator(float dt);
+    void drawEscalator(sf::RenderWindow &window);
+    void escalatorMovesAnythingOnIt();
+
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
     sf::Vector2f windowSize;
@@ -38,6 +42,7 @@ private:
     std::unique_ptr<Map> map;
     std::unique_ptr<Cobb> cobb;
     std::vector<std::unique_ptr<Item>> items;
+    std::unique_ptr < std::vector <Escalator>> escalator =nullptr;
 
     sf::RenderTexture lightMapTexture;
     //std::vector<sf::Vector2f> darknessPockets;

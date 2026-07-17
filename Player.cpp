@@ -1,10 +1,15 @@
 #include "Player.h"
+#include <iostream>
 Player::Player(float velocity, sf::Vector2f position, sf::Vector2f direction, sf::Texture& texture, float playersWalkingNoiseRadius, sf::Keyboard::Scancode left, sf::Keyboard::Scancode right,
-	sf::Keyboard::Scancode up, sf::Keyboard::Scancode down , sf::Keyboard::Scancode equip) : Entity(velocity, position, direction), playerSprite(texture), playerAnimation(texture, { 6,6,6,6,6,6,6,6 }, 0.1, sf::Vector2u(6, 8)) {
+	sf::Keyboard::Scancode up, sf::Keyboard::Scancode down , sf::Keyboard::Scancode equip, float escalatorSpeed) : Entity(velocity, position, direction), playerSprite(texture), playerAnimation(texture, { 6,6,6,6,6,6,6,6 }, 0.1, sf::Vector2u(6, 8)) {
+	
+	this->escalatorSpeed = escalatorSpeed;
 	
 	playerSprite.setOrigin(sf::Vector2f(playerAnimation.getXyRect().size.x/2, playerAnimation.getXyRect().size.y / 2));
 
 	spriteRowNo = 0;
+
+	this->playerInitialSpeed = velocity;
 
 	this->left = left;
 	this->right = right;
@@ -40,9 +45,17 @@ void Player::inputUpdate() {
 }
 sf::Vector2f Player::update(float dt) {
 	spriteRowNo = -1;
+	
 
 	sf::Vector2f position(this->getPosition());
 	sf::Vector2f offset = this->getDirection() * this->getVelocity() * dt;
+
+	if (isOnEscalator) {
+		offset.y -= dt * escalatorSpeed;
+
+		isOnEscalator = false;
+	}
+
 	if (this->getDirection().x >0 && this->getDirection().y > 0) {
 		spriteRowNo = 4;
 	}
@@ -70,6 +83,7 @@ sf::Vector2f Player::update(float dt) {
 	if (spriteRowNo != -1) {
 		playerAnimation.update(spriteRowNo, dt);
 	}
+	
 	playerSprite.setTextureRect(playerAnimation.getXyRect());
 
 	setDirectionOfStoneHeldByPlayer();
@@ -161,4 +175,7 @@ void Player::setDirectionOfStoneHeldByPlayer() {
 			stone->setHorizontalDirection(-1);
 		}
 	}
+}
+void Player::setIsOnEscalatorToTrue() {
+	isOnEscalator = true;
 }

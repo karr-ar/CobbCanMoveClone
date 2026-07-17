@@ -1,6 +1,6 @@
 #include "Candle.h"
 
-Candle::Candle(float luminosityRadius, sf::Vector2f position, sf::Texture &texture, float equipNoiseRadius, float unequipNoiseRadius) : Item(luminosityRadius,position,texture,equipNoiseRadius,unequipNoiseRadius)
+Candle::Candle(float luminosityRadius, sf::Vector2f position, sf::Texture &texture, float equipNoiseRadius, float unequipNoiseRadius, float escalatorSpeed) : Item(luminosityRadius,position,texture,equipNoiseRadius,unequipNoiseRadius, escalatorSpeed)
 , candleAnimation(texture, {3}, 0.1, sf::Vector2u(3, 1)) {
 	
 	getSprite().setTextureRect(candleAnimation.getXyRect());
