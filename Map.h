@@ -17,6 +17,9 @@ public:
 	std::vector <sf::Vector2f> getWalls2();
 	std::vector <Escalator> getEscalator();
 	// update function and a boolean vector which will tell whether to draw a certain area or not based on how far the user is to it
+
+	sf::Vector2f getFurnacePos();
+
 private:
 	std::vector <sf::Vector2f> walls;
 	std::vector <sf::Vector2f> tiles;
@@ -27,6 +30,8 @@ private:
 	sf::Vector2f playerInitialPos;
 	sf::Vector2f cobbInitialPos;
 	std::vector <sf::Vector2f> cobbsAllowablePositions;
+
+	sf::Vector2f furnacePos;
 
 
 	sf::Sprite wallSprite;

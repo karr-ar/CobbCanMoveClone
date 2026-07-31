@@ -19,6 +19,8 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
     float escalator_speed = configData.count("escalator_speed") ? configData["escalator_speed"] : 0;
 
+    float furnace_glow_radius = configData.count("furnace_glow_radius") ? configData["furnace_glow_radius"] : 0;
+
     // Map initialization
     map = std::make_unique<Map>("sprites/graphics/map.txt", textureHolder.get(TextureID::Wall), textureHolder.get(TextureID::Tile),   //hardcoded map path for now
                                textureHolder.get(TextureID::Wall2), textureHolder.get(TextureID::Grass), textureHolder.get(TextureID::Escalator));  
@@ -26,6 +28,9 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
     //map just helped us create escalator at specified position it wont handle update logic and all for it
     escalator = std::make_unique<std::vector <Escalator>>(map->getEscalator());
+
+    //initializing furnace
+    furnace = std::make_unique<Furnace>(Furnace(map->getFurnacePos(), textureHolder.get(TextureID::Furnace), furnace_glow_radius));
 
     sf::Vector2f playerInitialLoc = map->getPlayerInitialPosition();
 
@@ -73,7 +78,7 @@ void PlayingState::update(float dt) {
     player->move(sf::Vector2f(0, offsetPlayer.y));
     playerWallCollision(false);
 
-    player->setVisibility(items); // constantlly checks for player being under the light source
+    player->setVisibility(items,furnace); // constantlly checks for player being under the light source
     cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
 
     workOnCobbCanHear();
@@ -83,10 +88,17 @@ void PlayingState::update(float dt) {
     //update escalators sprite
     updateEscalator(dt);
 
+    //update furnace
+    furnace->update(dt);
+    //check if anythings on furnace
+    furnaceBurns();
+
+    playerCobbCollision();
+
     escalatorMovesAnythingOnIt();
 
     updateItems(dt);
-    deleteStones();
+    deleteItems();
 
     view.setCenter(player->getPosition()); //for now the camera is rigid but ill fix it  later
 }
@@ -96,9 +108,13 @@ void PlayingState::render(sf::RenderWindow& window) {
     window.setView(view);
     map->draw(window);
     drawEscalator(window);
+    
     drawItems(window);
     player->draw(window);
     player->drawPlayersEquippedItem(window);
+    //drawing furnace after everything else cuz even if it takes time to delete it should atleast hide for a while
+    furnace->draw(window);
+    
     cobb->draw(window);
     
 
@@ -154,9 +170,15 @@ void PlayingState::render(sf::RenderWindow& window) {
     lightMapTexture.draw(lightGlow, eraser);
 
     float cobbGlowRadius = configData.count("cobbs_glow_radius") ? configData["cobbs_glow_radius"] : 0;
-    float scaleFactor2 = cobbGlowRadius / radiusOfLightMaskTexture;
-    lightGlow.setScale(sf::Vector2f(scaleFactor2, scaleFactor2));
+    scaleFactor = cobbGlowRadius / radiusOfLightMaskTexture;
+    lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
     lightGlow.setPosition(cobb->getPosition());
+    lightMapTexture.draw(lightGlow, eraser);
+
+    
+    scaleFactor = furnace->getLuminosityRadius() / radiusOfLightMaskTexture;
+    lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
+    lightGlow.setPosition(furnace->getPosition() + sf::Vector2f(furnace->getSprite().getTextureRect().size/2));
     lightMapTexture.draw(lightGlow, eraser);
 
     lightMapTexture.display();
@@ -165,6 +187,10 @@ void PlayingState::render(sf::RenderWindow& window) {
     window.draw(lightMapSprite);
 
     window.display();
+}
+
+std::string PlayingState::isFinished() {
+    return gameOver;
 }
 
 bool PlayingState::checkCollision(sf::FloatRect first, sf::FloatRect second) {
@@ -312,15 +338,15 @@ void PlayingState::workOnCobbCanHear() {
         }
     }
 }
-void PlayingState::deleteStones() {
+void PlayingState::deleteItems() {
     for (int i = 0;i < items.size();i++) {
-        Stone* stone = dynamic_cast<Stone*>(items[i].get());
-        if (stone != nullptr) {
-            if (stone->getDeleteStone()) {
-                items[i].release();
+            if (items[i]->getDeleteItem()) {
+                if (player->getItemEquipped()) {
+                    player->itemEquippedByPlayerJustGotDeletedSoSettingItNull();
+                }
                 items.erase(items.begin()+i);
                 i--;
-            }
+            
         }
     }
 }
@@ -340,7 +366,8 @@ void PlayingState::escalatorMovesAnythingOnIt() {
         itemRect.position = items[i]->getPosition();
         for (int j = 0;j < escalator->size(); j++) {
             sf::FloatRect escalatorRect = escalator->at(j).getSprite().getGlobalBounds();
-            if (checkCollision(itemRect, escalatorRect)) {
+            auto intersection = itemRect.findIntersection(escalatorRect);
+            if (intersection.has_value() && intersection->size.x >= itemRect.size.x /1.85f) {
                 items[i]->setIsOnEscalatorToTrue();
                 break;
             }
@@ -350,9 +377,33 @@ void PlayingState::escalatorMovesAnythingOnIt() {
         sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
         for (int j = 0;j < escalator->size(); j++) {
             sf::FloatRect escalatorRect = escalator->at(j).getSprite().getGlobalBounds();
-            if (checkCollision(playerRect, escalatorRect)) {
+            auto intersection = playerRect.findIntersection(escalatorRect);
+            if (intersection.has_value() && intersection->size.x >= playerRect.size.x / 3.0f ) {
                 player->setIsOnEscalatorToTrue();
                 break;
             }
         }
+}
+void PlayingState::furnaceBurns() {
+    sf::FloatRect furnaceRect = furnace->getSprite().getGlobalBounds();
+    for (int i = 0;i < items.size();i++) {
+        Stone* stone = dynamic_cast<Stone*>(items[i].get());
+        if (stone != nullptr && stone->getIsOnAir()) continue;
+        sf::FloatRect itemRect = items[i]->getSprite().getGlobalBounds();
+        itemRect.position = items[i]->getPosition();
+        if (itemRect.findIntersection(furnaceRect)) {
+            items[i]->setIsOnFurnace();
+        }
+    }
+    //sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
+    //if (playerRect.findIntersection(furnaceRect)) {
+    //    gameOver = true;
+    //}
+}
+void PlayingState::playerCobbCollision() {
+    sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
+    sf::FloatRect cobbRect = cobb->getCobbSprite().getGlobalBounds();
+    if (playerRect.findIntersection(cobbRect)) {
+        gameOver = "jumpscare";
+    }
 }

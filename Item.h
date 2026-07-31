@@ -17,6 +17,10 @@ private:
 	bool isOnEscalator = false;
 	float escalatorSpeed;
 
+	bool deleteItem = false;
+
+	bool isOnFurnace = false;
+
 public:
 
 	// MUST add a virtual destructor for safe inheritance
@@ -44,6 +48,10 @@ public:
 
 	virtual void update(float dt, sf::Vector2f playerPosition);
 	virtual void unequip();                      //overridden in stone class
-	
+
+	bool getDeleteItem();
+	void setDeleteItem();
+
+	void setIsOnFurnace();
 };
 

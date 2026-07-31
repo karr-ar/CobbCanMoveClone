@@ -1,10 +1,10 @@
 #include "Cobb.h"
 #include <iostream>
 Cobb::Cobb(sf::Texture& cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction,float cobbScaledBy, float cobbsVisualRadius) :cobbSprite(cobbTexture),
-Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 15 }, 0.1, sf::Vector2u(15, 1)) {
+Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 14 }, 0.1, sf::Vector2u(14, 1)) {
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
 	cobbSprite.setOrigin(sf::Vector2f(cobbAnimation.getXyRect().size.x/2, cobbAnimation.getXyRect().size.y / 2));
-	cobbSprite.setScale(sf::Vector2f(2.5, 2.5));
+	cobbSprite.setScale(sf::Vector2f(1.5, 1.5));
 
 
 	this->cobbChasingSpeed = cobbChasingSpeed;
@@ -58,10 +58,10 @@ sf::Vector2f Cobb::update(float dt) {
 	cobbAnimation.update(0, dt);
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
 	if (getDirection().x > 0) {
-		cobbSprite.setScale(sf::Vector2f(-2.5, 2.5));
+		cobbSprite.setScale(sf::Vector2f(1.5, 1.5));
 	}
 	else {
-		cobbSprite.setScale(sf::Vector2f(2.5, 2.5));
+		cobbSprite.setScale(sf::Vector2f(-1.5, 1.5));
 	}
 	return dt * getDirection() * getVelocity();
 }

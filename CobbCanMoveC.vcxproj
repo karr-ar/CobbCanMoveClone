@@ -149,8 +149,10 @@
     <ClCompile Include="Cobb.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Escalator.cpp" />
+    <ClCompile Include="Furnace.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Item.cpp" />
+    <ClCompile Include="JumpScareState.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Player.cpp" />
@@ -163,9 +165,11 @@
     <ClInclude Include="Cobb.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Escalator.h" />
+    <ClInclude Include="Furnace.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="Item.h" />
+    <ClInclude Include="JumpScareState.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayingState.h" />

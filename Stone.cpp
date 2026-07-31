@@ -32,6 +32,8 @@ void Stone::update(float dt, sf::Vector2f playerPosition) {
 	jump();
 
 	if (onAir) {
+
+
 		sf::Vector2f currPosition = getPosition();
 
 		UpwardVelocity = UpwardVelocity + downwardAcceleration * dt;
@@ -45,7 +47,7 @@ void Stone::update(float dt, sf::Vector2f playerPosition) {
 		getSprite().setTextureRect(stoneDestructionAnimation.getXyRect());
 		destructionTimer -= dt;
 		if (destructionTimer <= 0) {
-			deleteStone = true;
+			setDeleteItem();
 			displayDestructionAnimation = false;
 		}
 	}
@@ -63,6 +65,6 @@ void Stone::unequip() {
 void Stone::setHorizontalDirection(int x) {
 	horizontalDirection = x;
 }
-bool Stone::getDeleteStone() {
-	return deleteStone;
+bool Stone::getIsOnAir() {
+	return onAir;
 }

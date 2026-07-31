@@ -24,7 +24,6 @@ void Item::unequip() {
 Item::Item(float luminosityRadius,sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius, float unequipNoiseRadius, float escalatorSpeed) :itemSprite(texture) {
 	this->luminosityRadius = luminosityRadius;
 	setPosition(position);
-	itemSprite.setOrigin(sf::Vector2f(texture.getSize().x/2, texture.getSize().y / 2));
 
 	this->equipNoiseRadius = equipNoiseRadius;
 	this->unequipNoiseRadius = unequipNoiseRadius;
@@ -34,6 +33,11 @@ sf::Sprite& Item::getSprite() {
 	return itemSprite;
 }
 void Item::update(float dt, sf::Vector2f playerPosition) {
+	//delete if its on furnace
+	if (isOnFurnace) {
+		setDeleteItem();
+	}
+
 	if (equipped) {
 		itemSprite.setScale(sf::Vector2f(0.5, 0.5));
 		setPosition(playerPosition);
@@ -84,4 +88,14 @@ void Item::produceUnEquipNoise() {
 }
 void Item::setIsOnEscalatorToTrue() {
 	isOnEscalator = true;
+}
+
+bool Item::getDeleteItem() {
+	return deleteItem;
+}
+void Item::setDeleteItem() {
+	deleteItem = true;
+}
+void Item::setIsOnFurnace(){
+	isOnFurnace = true;
 }

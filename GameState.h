@@ -13,6 +13,11 @@ public:
 	virtual void render(sf::RenderWindow& window)=0;
 	// virtual destructor is a must — without it, deleting through a GameState*
 	// only runs ~GameState(), skipping derived class cleanup (leaks/UB)
+
+	
+
+	virtual std::string isFinished() { return ""; } // default: never finished
+
 	virtual ~GameState() = default;
 };
 

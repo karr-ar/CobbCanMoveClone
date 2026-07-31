@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "PlayingState.h"
+#include "JumpScareState.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -29,6 +30,8 @@ Game::Game() {
 	textureHolder.load(TextureID::Wall2, "sprites/graphics/wall2.PNG");
 	textureHolder.load(TextureID::Grass, "sprites/graphics/grass.PNG");
 	textureHolder.load(TextureID::Escalator, "sprites/graphics/escalator.PNG");
+	textureHolder.load(TextureID::Furnace, "sprites/graphics/furnace.PNG");
+	textureHolder.load(TextureID::JumpScare, "sprites/graphics/jumpscare.PNG");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)
@@ -56,6 +59,14 @@ void Game::run() {
 
 		//
 		currentState->render(window);
+
+		if (currentState->isFinished() == ""){}//do nothing
+		else if (currentState->isFinished() == "jumpscare") {
+			currentState = std::make_unique<JumpScareState>(textureHolder.get(TextureID::JumpScare), configData, windowSize);
+		}
+		else if (currentState->isFinished() == "loadingScreen") {
+			currentState = nullptr;
+		}
 	}
 }
 

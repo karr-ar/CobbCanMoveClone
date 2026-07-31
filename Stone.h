@@ -20,7 +20,6 @@ private:
     Animation stoneDestructionAnimation;
     bool displayDestructionAnimation = false;
     float destructionTimer = 0.5f;
-    bool deleteStone = false;
 
 public:
     Stone(float luminosityRadius, sf::Vector2f position, sf::Texture& texture, float equipNoiseRadius, float unequipNoiseRadius , 
@@ -30,6 +29,6 @@ public:
     void setJump();
     void unequip() override;
     void setHorizontalDirection(int x);
-    bool getDeleteStone();
+    bool getIsOnAir();
 };
 

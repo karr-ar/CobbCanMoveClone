@@ -143,7 +143,7 @@ void Player::drawPlayersEquippedItem(sf::RenderWindow& window) {
 	if(itemEquipped!=nullptr)
 	window.draw(itemEquipped->getSprite());
 }
-void Player::setVisibility(const std::vector<std::unique_ptr<Item>>& items) {
+void Player::setVisibility(const std::vector<std::unique_ptr<Item>>& items ,const std::unique_ptr <Furnace> &furnace) {
 	visible = false;
 	for (int i = 0;i < items.size();i++) {
 		Candle* candle = dynamic_cast<Candle*>(items[i].get());
@@ -154,6 +154,10 @@ void Player::setVisibility(const std::vector<std::unique_ptr<Item>>& items) {
 				break;
 			}
 		}
+	}
+	float furnaceRad = furnace->getLuminosityRadius();
+	if ((furnace->getPosition() - this->getPosition()).lengthSquared() <= furnaceRad * furnaceRad) {
+		visible = true;
 	}
 }
 bool Player::getVisibility() {
@@ -178,4 +182,10 @@ void Player::setDirectionOfStoneHeldByPlayer() {
 }
 void Player::setIsOnEscalatorToTrue() {
 	isOnEscalator = true;
+}
+void Player::itemEquippedByPlayerJustGotDeletedSoSettingItNull() {
+	itemEquipped = nullptr;
+}
+Item* Player::getItemEquipped() {
+	return itemEquipped;
 }

@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include "ResourceHolder.hpp"
 #include "ResourceIdentifiers.h"
+#include "Furnace.h"
 
 class PlayingState : public GameState {
 public:
@@ -17,6 +18,7 @@ public:
     void handleInputs() override;
     void update(float dt) override;
     void render(sf::RenderWindow& window) override;
+    std::string isFinished() override;
 
 private:
     bool checkCollision(sf::FloatRect first, sf::FloatRect second);
@@ -27,11 +29,14 @@ private:
     bool calculateCobbCanSee();
     void workOnCobbCanHear();
     sf::Texture generateLightMask(int radius);
-    void deleteStones();
+    void deleteItems();
 
     void updateEscalator(float dt);
     void drawEscalator(sf::RenderWindow &window);
     void escalatorMovesAnythingOnIt();
+
+    void furnaceBurns();
+    void playerCobbCollision();
 
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
@@ -43,10 +48,13 @@ private:
     std::unique_ptr<Cobb> cobb;
     std::vector<std::unique_ptr<Item>> items;
     std::unique_ptr < std::vector <Escalator>> escalator =nullptr;
+    std::unique_ptr <Furnace> furnace = nullptr;
 
     sf::RenderTexture lightMapTexture;
     //std::vector<sf::Vector2f> darknessPockets;
     sf::Texture lightMaskTexture;
 
     ResourceHolder<TextureID, sf::Texture>& textureHolder;
+
+    std::string gameOver = ""; //shouldnt be simple and plain like this i gotta work for different animations on different deaths
 };

@@ -40,6 +40,8 @@ Map::Map(std::string textPath, sf::Texture &wallTexture, sf::Texture &tileTextur
 				escalator.push_back(Escalator(escalatorTexture, sf::Vector2f(j * sizeX, i * sizeY)));
 			}
 			else if (map[i][j] == 'F') {
+				//needs addition in size due to furnace not being centered while others are centered
+				furnacePos = sf::Vector2f(j * sizeX - sizeX/2.0, i * sizeY - sizeY/2.0);
 			}
 			else if (map[i][j] == 'e') {
 				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
@@ -94,4 +96,7 @@ std::vector <sf::Vector2f> Map::getWalls2() {
 }
 std::vector <Escalator> Map::getEscalator() {
 	return escalator;
+}
+sf::Vector2f Map::getFurnacePos() {
+	return furnacePos;
 }

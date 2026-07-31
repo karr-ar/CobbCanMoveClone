@@ -22,3 +22,4 @@ stones_horizontal_velocity 500
 cobbs_investigation_speed 120
 cobbs_scaled_by 2 
 escalator_speed 50
+furnace_glow_radius 600

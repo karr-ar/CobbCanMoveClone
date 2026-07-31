@@ -5,6 +5,7 @@
 #include "Candle.h"
 #include <memory>
 #include "Stone.h"
+#include "Furnace.h"
 
 class Player :
     public Entity
@@ -26,7 +27,7 @@ public:
     bool itemPlayerCollision(sf::Sprite itemSprite, sf::Sprite playerSprite);
     void drawPlayersEquippedItem(sf::RenderWindow& window); // bcz this needs to be drawn after the player unlike other items
 
-    void setVisibility(const std::vector<std::unique_ptr<Item>>& items);
+    void setVisibility(const std::vector<std::unique_ptr<Item>>& items ,const  std::unique_ptr <Furnace> &furnace);
     bool getVisibility();
 
     bool getIsWalking();
@@ -35,6 +36,9 @@ public:
     void setDirectionOfStoneHeldByPlayer();
 
     void setIsOnEscalatorToTrue();
+
+    Item* getItemEquipped();
+    void itemEquippedByPlayerJustGotDeletedSoSettingItNull();
 
 private:
     float playerInitialSpeed; // this will come from config file  this will remain constant unlike players actual speed that can change if player is on escalator that speed is handled in entity class
