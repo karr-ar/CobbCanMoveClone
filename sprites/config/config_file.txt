@@ -23,3 +23,7 @@ cobbs_investigation_speed 120
 cobbs_scaled_by 2 
 escalator_speed 50
 furnace_glow_radius 600
+initial_scent_score 5
+least_score_that_will_enrage_cobb 1.5
+distance_difference_required_for_new_scent 70
+cobb_smell_radius 200

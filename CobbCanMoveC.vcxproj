@@ -157,6 +157,7 @@
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayingState.cpp" />
+    <ClCompile Include="Smell.cpp" />
     <ClCompile Include="Stone.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +176,7 @@
     <ClInclude Include="PlayingState.h" />
     <ClInclude Include="ResourceHolder.hpp" />
     <ClInclude Include="ResourceIdentifiers.h" />
+    <ClInclude Include="Smell.h" />
     <ClInclude Include="Stone.h" />
   </ItemGroup>
   <ItemGroup>

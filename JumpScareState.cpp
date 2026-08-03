@@ -10,9 +10,9 @@ void JumpScareState::update(float dt) {
 	sprite.setTextureRect(jumpScareAnimation.getXyRect());
 	startTime += dt;
 	if (startTime > 1.05) {
-		nextState = "loadingScreen";
-		//jumpScareAnimation.update(1, dt);
-		//sprite.setTextureRect(jumpScareAnimation.getXyRect());
+		//nextState = "loadingScreen";
+		jumpScareAnimation.update(1, dt);
+		sprite.setTextureRect(jumpScareAnimation.getXyRect());  //this is temporary fix
 	}
 }
 void JumpScareState::render(sf::RenderWindow& window) {

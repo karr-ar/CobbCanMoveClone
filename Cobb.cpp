@@ -1,6 +1,7 @@
 #include "Cobb.h"
 #include <iostream>
-Cobb::Cobb(sf::Texture& cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction,float cobbScaledBy, float cobbsVisualRadius) :cobbSprite(cobbTexture),
+Cobb::Cobb(sf::Texture& cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction,float cobbScaledBy, float cobbsVisualRadius
+																					, float cobb_smell_radius, float least_score_that_will_enrage_cobb) :cobbSprite(cobbTexture),
 Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 14 }, 0.1, sf::Vector2u(14, 1)) {
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
 	cobbSprite.setOrigin(sf::Vector2f(cobbAnimation.getXyRect().size.x/2, cobbAnimation.getXyRect().size.y / 2));
@@ -12,6 +13,9 @@ Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 14 }, 0.1, s
 	this->cobbScaledBy= cobbScaledBy;   //when cobb is chasing is enabled it gets bigger 
 	this->cobbsVisualRadius = cobbsVisualRadius;
 
+	this->cobb_smell_radius = cobb_smell_radius;
+	this->least_score_that_will_enrage_cobb = least_score_that_will_enrage_cobb;
+
 }
 void Cobb::setPosition(sf::Vector2f position) {
 	Entity::setPosition(position);
@@ -19,7 +23,7 @@ void Cobb::setPosition(sf::Vector2f position) {
 }
 void Cobb::followTheGivenPosition(sf::Vector2f position) {
 	sf::Vector2f direction( position - getPosition());
-	if (direction.x != 0 && direction.y != 0) direction = direction.normalized();
+	if (direction.x != 0 || direction.y != 0) direction = direction.normalized();
 
 	// Create a 1.5 pixel tolerance zone
 	float deadzone = 4;
@@ -31,7 +35,6 @@ void Cobb::followTheGivenPosition(sf::Vector2f position) {
 		setDirection(0, 0);
 	}
 
-	this->setDirection(direction);
 }
 void Cobb::RandomMovement(sf::Vector2f nextRandomPos) {
 	if (updateCobbsPosition) {
@@ -103,6 +106,15 @@ void Cobb::chooseMovement(sf::Vector2f nextRandomPos) {
 		this->setVelocity(cobbChasingSpeed);
 		cobbFollowsLastHeardPosition();
 	}
+	else if (scentRetention) {
+		if (isCobbEnragedDueToSmell) {
+			this->setVelocity(cobbChasingSpeed);
+		}
+		else {
+			this->setVelocity(getVelocity());
+		}
+		cobbFollowsLastSmelledPosition();
+	}
 	else {
 		this->setVelocity(getVelocity());
 		RandomMovement(nextRandomPos);
@@ -118,5 +130,41 @@ void Cobb::cobbFollowsLastHeardPosition(){
 	followTheGivenPosition(lastHeardPosition);
 	if ((this->getPosition() - lastHeardPosition).length() < 5) {
 		cobbsHearingRetention = false;
+	}
+}
+void Cobb::setScentRetentionAndLastPositionSmelled(const std::vector<std::unique_ptr<Smell>>& scent) {
+	scentRetention = false;
+	isCobbEnragedDueToSmell = false;
+	
+	if (!scent.empty()) {
+		float minDistanceDiffBetweenScentAndCobb= (getPosition()-scent[0]->getPosition()).length();
+		int idx = 0;
+		for (int i = 1;i < scent.size();i++) {
+			if ((getPosition() - scent[i]->getPosition()).length() < minDistanceDiffBetweenScentAndCobb) {
+				minDistanceDiffBetweenScentAndCobb = (getPosition() - scent[i]->getPosition()).length();
+				idx = 0;
+			}
+		}
+		if (minDistanceDiffBetweenScentAndCobb <= cobb_smell_radius) {
+			scentRetention = true;
+			lastPositionSmelled = scent[idx]->getPosition();
+			if (scent[idx]->getScore() >= least_score_that_will_enrage_cobb) {
+				isCobbEnragedDueToSmell = true;
+			}
+		}
+	}
+	// Design note: Cobb could instead be made to continuously chase the freshest scent
+	// by deleting nearby scent points the moment he reaches them (removing the pause
+	// entirely). I chose not to do this on purpose -- letting him briefly stand still
+	// at the last smelled position, even with a few older scent points still lingering
+	// nearby, makes him pause for a beat like he's actually sniffing the air before
+	// picking up the next trail, instead of just tracking a point mechanically.
+	// This reads as far more unsettling/alive than a smooth, uninterrupted follow.
+}
+void Cobb::cobbFollowsLastSmelledPosition() {
+	followTheGivenPosition(lastPositionSmelled);
+	if ((this->getPosition() - lastPositionSmelled).length() < 10) {
+		scentRetention = false;
+		isCobbEnragedDueToSmell = false;
 	}
 }

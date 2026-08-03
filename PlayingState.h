@@ -9,6 +9,7 @@
 #include "ResourceHolder.hpp"
 #include "ResourceIdentifiers.h"
 #include "Furnace.h"
+#include "Smell.h"
 
 class PlayingState : public GameState {
 public:
@@ -38,6 +39,10 @@ private:
     void furnaceBurns();
     void playerCobbCollision();
 
+    void addScent();
+    void updateScent(float dt);
+    void deleteScent();
+
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
     sf::Vector2f windowSize;
@@ -57,4 +62,6 @@ private:
     ResourceHolder<TextureID, sf::Texture>& textureHolder;
 
     std::string gameOver = ""; //shouldnt be simple and plain like this i gotta work for different animations on different deaths
+
+    std::vector<std::unique_ptr<Smell>> scent;
 };

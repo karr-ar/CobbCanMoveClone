@@ -12,6 +12,9 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
     float cobbScaledBy = configData.count("cobbs_scaled_by") ? configData["cobbs_scaled_by"] : 0;
     float cobbsVisualRadius = configData.count("cobbs_visual_radius") ? configData["cobbs_visual_radius"] : 0;
 
+    float least_score_that_will_enrage_cobb = configData.count("least_score_that_will_enrage_cobb") ? configData["least_score_that_will_enrage_cobb"] : 0;
+    float cobb_smell_radius = configData.count("cobb_smell_radius") ? configData["cobb_smell_radius"] : 0;
+
     float playerSpeed = configData.count("players_speed") ? configData["players_speed"] : 0;
     float playerWalkingNoiseRadius = configData.count("players_walking_noise_radius") ? configData["players_walking_noise_radius"] : 0;
 
@@ -42,7 +45,8 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
                                                                                                                    , escalator_speed);
 
     //cobb Initialize
-    cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius);
+    cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
+                                                                                                        ,cobb_smell_radius,least_score_that_will_enrage_cobb);
 
     spawnItems();
 
@@ -78,10 +82,16 @@ void PlayingState::update(float dt) {
     player->move(sf::Vector2f(0, offsetPlayer.y));
     playerWallCollision(false);
 
+    addScent();
+    updateScent(dt);
+    deleteScent();
+
     player->setVisibility(items,furnace); // constantlly checks for player being under the light source
     cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
 
     workOnCobbCanHear();
+
+    cobb->setScentRetentionAndLastPositionSmelled(scent);
 
     cobb->move(sf::Vector2f(cobb->update(dt)));
 
@@ -405,5 +415,35 @@ void PlayingState::playerCobbCollision() {
     sf::FloatRect cobbRect = cobb->getCobbSprite().getGlobalBounds();
     if (playerRect.findIntersection(cobbRect)) {
         gameOver = "jumpscare";
+    }
+}
+
+void PlayingState::addScent() {
+    float initial_scent_score = configData.count("initial_scent_score") ? configData["initial_scent_score"] : 0;
+    float distance_difference_required_for_new_scent = configData.count("distance_difference_required_for_new_scent") ? configData["distance_difference_required_for_new_scent"] : 0;
+    if (player->getIsWalking()) {
+        if (scent.empty()) {
+            scent.push_back(std::make_unique<Smell>(player->getPosition(), initial_scent_score));
+        }
+        else if ((player->getPosition() - scent[scent.size() - 1]->getPosition()).length() >= distance_difference_required_for_new_scent) {
+            scent.push_back(std::make_unique<Smell>(player->getPosition(), initial_scent_score));
+        }
+        else {
+            //do nothing
+        }
+    }
+}
+void PlayingState::updateScent(float dt) {
+    for (int i = 0;i < scent.size();i++) {
+        scent[i]->update(dt);
+    }
+}
+void PlayingState::deleteScent() {
+    for (int i = 0;i < scent.size();i++) {
+        if (scent[i]->getToDelete()) {
+            scent[i] = nullptr;
+            scent.erase(scent.begin()+i);
+            i--;
+        }
     }
 }

@@ -3,6 +3,7 @@
 #include "Animation.h"
 #include "cmath"
 #include "Player.h"
+#include "Smell.h"
 class Cobb :
     public Entity
 {
@@ -23,8 +24,15 @@ class Cobb :
     float cobbScaledBy;
     float cobbsVisualRadius;
 
+    float cobb_smell_radius;
+    bool scentRetention = false;
+    sf::Vector2f lastPositionSmelled;
+    float least_score_that_will_enrage_cobb;
+    bool isCobbEnragedDueToSmell = false;
+
 public:
-    Cobb(sf::Texture &cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction, float cobbScaledBy, float cobbsVisualRadius);
+    Cobb(sf::Texture &cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction, float cobbScaledBy, float cobbsVisualRadius
+                                                                        , float cobb_smell_radius , float least_score_that_will_enrage_cobb);
     void setSprite(sf::Texture cobbTexture);
     sf::Vector2f update(float dt);
     void draw(sf::RenderWindow& window);
@@ -41,5 +49,8 @@ public:
     void setCobbsHearingRetention();
     void setCobbsLastHeardPosition(sf::Vector2f lastHeardPosition);
     void cobbFollowsLastHeardPosition();
+
+    void setScentRetentionAndLastPositionSmelled(const std::vector<std::unique_ptr<Smell>> &scent);
+    void cobbFollowsLastSmelledPosition();
 };
 
