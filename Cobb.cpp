@@ -7,7 +7,7 @@ Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 14 }, 0.1, s
 	cobbSprite.setOrigin(sf::Vector2f(cobbAnimation.getXyRect().size.x/2, cobbAnimation.getXyRect().size.y / 2));
 	cobbSprite.setScale(sf::Vector2f(1.5, 1.5));
 
-
+	this->cobbNormalSpeed = velocity;
 	this->cobbChasingSpeed = cobbChasingSpeed;
 	this->cobbInvestigationSpeed= cobbInvestigationSpeed;
 	this->cobbScaledBy= cobbScaledBy;   //when cobb is chasing is enabled it gets bigger 
@@ -111,12 +111,12 @@ void Cobb::chooseMovement(sf::Vector2f nextRandomPos) {
 			this->setVelocity(cobbChasingSpeed);
 		}
 		else {
-			this->setVelocity(getVelocity());
+			this->setVelocity(cobbInvestigationSpeed);
 		}
 		cobbFollowsLastSmelledPosition();
 	}
 	else {
-		this->setVelocity(getVelocity());
+		this->setVelocity(cobbNormalSpeed);
 		RandomMovement(nextRandomPos);
 	}
 }

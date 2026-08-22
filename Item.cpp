@@ -99,3 +99,9 @@ void Item::setDeleteItem() {
 void Item::setIsOnFurnace(){
 	isOnFurnace = true;
 }
+void Item::setItemType(std::string type) {
+	itemType = type;
+}
+std::string Item::getItemType() {
+	return itemType;
+}

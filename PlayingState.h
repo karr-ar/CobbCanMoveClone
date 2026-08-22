@@ -10,6 +10,7 @@
 #include "ResourceIdentifiers.h"
 #include "Furnace.h"
 #include "Smell.h"
+#include "SurvivalStat.h"
 
 class PlayingState : public GameState {
 public:
@@ -36,12 +37,23 @@ private:
     void drawEscalator(sf::RenderWindow &window);
     void escalatorMovesAnythingOnIt();
 
-    void furnaceBurns();
-    void playerCobbCollision();
-
     void addScent();
     void updateScent(float dt);
     void deleteScent();
+
+    void spawnHungerSystem();
+    void drawHungerSystem(sf::RenderWindow &window);
+    void updateHungerSystem(float dt);
+
+    void spawnTemperatureSystem();
+    void drawTemperatureSystem(sf::RenderWindow& window);
+    void updateTemperatureSystem(float dt);
+
+    //possible deaths
+    void playerFreezesOrDiesOfHunger();
+    void playerCobbCollision();
+    void furnaceBurns();         // this one is not only for player but also for items
+
 
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
@@ -54,6 +66,18 @@ private:
     std::vector<std::unique_ptr<Item>> items;
     std::unique_ptr < std::vector <Escalator>> escalator =nullptr;
     std::unique_ptr <Furnace> furnace = nullptr;
+
+    std::vector<std::unique_ptr <SurvivalStat>> hunger;
+    float foodEatenValue = 0;
+    float hunger_decreased_by_carrot;
+    float hunger_max_value;
+    int noOfImagesOfFood;
+
+
+    std::vector<std::unique_ptr <SurvivalStat>> temperature;
+    bool freezingMode = false;
+    float temperature_max_value;
+    int noOfImagesOfSnowFlake;
 
     sf::RenderTexture lightMapTexture;
     //std::vector<sf::Vector2f> darknessPockets;

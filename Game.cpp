@@ -1,6 +1,6 @@
 #include "Game.h"
 #include "PlayingState.h"
-#include "JumpScareState.h"
+#include "DeathState.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -32,6 +32,9 @@ Game::Game() {
 	textureHolder.load(TextureID::Escalator, "sprites/graphics/escalator.PNG");
 	textureHolder.load(TextureID::Furnace, "sprites/graphics/furnace.PNG");
 	textureHolder.load(TextureID::JumpScare, "sprites/graphics/jumpscare.PNG");
+	textureHolder.load(TextureID::Carrot, "sprites/graphics/carrot.PNG");
+	textureHolder.load(TextureID::Carrot2, "sprites/graphics/carrott.PNG");
+	textureHolder.load(TextureID::Snowflake, "sprites/graphics/snowflake.PNG");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)
@@ -60,13 +63,25 @@ void Game::run() {
 		//
 		currentState->render(window);
 
-		if (currentState->isFinished() == ""){}//do nothing
-		else if (currentState->isFinished() == "jumpscare") {
-			currentState = std::make_unique<JumpScareState>(textureHolder.get(TextureID::JumpScare), configData, windowSize);
+		if (currentState->isFinished() == "jumpscare") {
+			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::JumpScare), configData, windowSize ,21, 0.05);
+		}
+		else if (currentState->isFinished() == "froze") {
+
+		}
+		else if (currentState->isFinished() == "burned") {
+
+		}
+		else if (currentState->isFinished() == "starved") {
+
+		}
+		else if (currentState->isFinished() == "menu") {
+
 		}
 		else if (currentState->isFinished() == "loadingScreen") {
-			currentState = nullptr;
+
 		}
+		else { }//do nothing 
 	}
 }
 

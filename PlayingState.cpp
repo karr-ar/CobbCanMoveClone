@@ -24,6 +24,8 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
     float furnace_glow_radius = configData.count("furnace_glow_radius") ? configData["furnace_glow_radius"] : 0;
 
+    hunger_decreased_by_carrot = configData.count("hunger_decreased_by_carrot") ? configData["hunger_decreased_by_carrot"] : 0;
+
     // Map initialization
     map = std::make_unique<Map>("sprites/graphics/map.txt", textureHolder.get(TextureID::Wall), textureHolder.get(TextureID::Tile),   //hardcoded map path for now
                                textureHolder.get(TextureID::Wall2), textureHolder.get(TextureID::Grass), textureHolder.get(TextureID::Escalator));  
@@ -44,6 +46,7 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
         sf::Keyboard::Scancode::A, sf::Keyboard::Scancode::D, sf::Keyboard::Scancode::W, sf::Keyboard::Scancode::S, sf::Keyboard::Scancode::E
                                                                                                                    , escalator_speed);
 
+
     //cobb Initialize
     cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
                                                                                                         ,cobb_smell_radius,least_score_that_will_enrage_cobb);
@@ -57,6 +60,9 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
         std::cout << "Critical Error: Failed to create lightmap texture!" << std::endl;
     }
     lightMaskTexture = generateLightMask(radiusOfLightMaskTexture);
+
+    spawnHungerSystem();
+    spawnTemperatureSystem();
 }
 void PlayingState::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
     if (const auto* resized = event.getIf<sf::Event::Resized>()) {
@@ -82,6 +88,9 @@ void PlayingState::update(float dt) {
     player->move(sf::Vector2f(0, offsetPlayer.y));
     playerWallCollision(false);
 
+    updateHungerSystem(dt);
+    updateTemperatureSystem(dt);
+
     addScent();
     updateScent(dt);
     deleteScent();
@@ -100,10 +109,13 @@ void PlayingState::update(float dt) {
 
     //update furnace
     furnace->update(dt);
+
     //check if anythings on furnace
     furnaceBurns();
-
+    //jumpscare
     playerCobbCollision();
+    //freeze or starve
+    playerFreezesOrDiesOfHunger();
 
     escalatorMovesAnythingOnIt();
 
@@ -173,6 +185,14 @@ void PlayingState::render(sf::RenderWindow& window) {
         }
     }
 
+    for (int i = 0; i < items.size(); i++) {
+        float scaleFactor = items[i]->getLuminosityRadius() / radiusOfLightMaskTexture;
+        lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
+        lightGlow.setPosition(items[i]->getPosition());
+        lightMapTexture.draw(lightGlow, eraser);
+    }
+
+
     float playerGlowRadius = configData.count("players_glow_radius") ? configData["players_glow_radius"] : 0;
     float scaleFactor = playerGlowRadius / radiusOfLightMaskTexture;
     lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
@@ -195,6 +215,9 @@ void PlayingState::render(sf::RenderWindow& window) {
     sf::Sprite lightMapSprite(lightMapTexture.getTexture());
     window.setView(window.getDefaultView());
     window.draw(lightMapSprite);
+
+    drawHungerSystem(window);
+    drawTemperatureSystem(window);
 
     window.display();
 }
@@ -290,6 +313,14 @@ void PlayingState::spawnItems() {
     for (int i = 0; i < no_of_rocks; i++) {
         items.push_back(std::make_unique<Stone>(general_item_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Stone), generalItemsEquipNoiseRadius, stones_unequip_noise_radius, stones_initial_upward_velocity, stones_downward_acceleration, stones_horizontal_velocity, escalator_speed));
     }
+
+    //spawning carrots
+    int number_of_carrots = configData.count("number_of_carrots") ? static_cast<int>(configData["number_of_carrots"]) : 0;
+    for (int i = 0;i < number_of_carrots;i++) {
+        items.push_back(std::make_unique<Item>(general_item_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Carrot2), generalItemsEquipNoiseRadius, 0, escalator_speed));
+        items[items.size() - 1]->setItemType("Carrot");
+        items[items.size() - 1]->getSprite().setOrigin(sf::Vector2f(items[items.size() - 1]->getSprite().getTexture().getSize().x / 2, items[items.size() - 1]->getSprite().getTexture().getSize().y / 2));
+    }
 }
 
 void PlayingState::drawItems(sf::RenderWindow& window) {
@@ -301,7 +332,15 @@ void PlayingState::drawItems(sf::RenderWindow& window) {
 }
 
 void PlayingState::updateItems(float dt) {
+
+    //if carrots are equipped delete them
     for (int i = 0; i < items.size(); i++) {
+        if (items[i]->getItemType() == "Carrot") {
+            if (items[i]->getEquipped()) {
+                items[i]->setDeleteItem();
+                foodEatenValue += hunger_decreased_by_carrot;
+            }
+        }
         items[i]->update(dt, player->getPosition());
     }
 }
@@ -394,29 +433,6 @@ void PlayingState::escalatorMovesAnythingOnIt() {
             }
         }
 }
-void PlayingState::furnaceBurns() {
-    sf::FloatRect furnaceRect = furnace->getSprite().getGlobalBounds();
-    for (int i = 0;i < items.size();i++) {
-        Stone* stone = dynamic_cast<Stone*>(items[i].get());
-        if (stone != nullptr && stone->getIsOnAir()) continue;
-        sf::FloatRect itemRect = items[i]->getSprite().getGlobalBounds();
-        itemRect.position = items[i]->getPosition();
-        if (itemRect.findIntersection(furnaceRect)) {
-            items[i]->setIsOnFurnace();
-        }
-    }
-    //sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
-    //if (playerRect.findIntersection(furnaceRect)) {
-    //    gameOver = true;
-    //}
-}
-void PlayingState::playerCobbCollision() {
-    sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
-    sf::FloatRect cobbRect = cobb->getCobbSprite().getGlobalBounds();
-    if (playerRect.findIntersection(cobbRect)) {
-        gameOver = "jumpscare";
-    }
-}
 
 void PlayingState::addScent() {
     float initial_scent_score = configData.count("initial_scent_score") ? configData["initial_scent_score"] : 0;
@@ -439,11 +455,142 @@ void PlayingState::updateScent(float dt) {
     }
 }
 void PlayingState::deleteScent() {
+    float cobb_consuming_scent_radius = configData.count("cobb_consuming_scent_radius") ? configData["cobb_consuming_scent_radius"] : 0;
     for (int i = 0;i < scent.size();i++) {
-        if (scent[i]->getToDelete()) {
+        if (scent[i]->getToDelete() || (scent[i]->getPosition() - cobb->getPosition()).length() <= cobb_consuming_scent_radius) {
             scent[i] = nullptr;
             scent.erase(scent.begin()+i);
             i--;
         }
+    }
+}
+
+void PlayingState::spawnHungerSystem() {
+    hunger_max_value = configData.count("hunger_max_value") ? configData["hunger_max_value"] : 0;
+    noOfImagesOfFood = configData.count("no_of_sprites_in_food_spritesheet") ? static_cast<int>(configData["no_of_sprites_in_food_spritesheet"]) : 0;
+    sf::Vector2f firstCarrotPos = sf::Vector2f(windowSize.x/2, windowSize.y/2) - sf::Vector2f(25,50);
+
+    for (int i = 0;i < 3;i++){
+        bool active = i == (3 - 1);
+        hunger.push_back(std::make_unique<SurvivalStat>(textureHolder.get(TextureID::Carrot), sf::Vector2f(i, 0),firstCarrotPos, noOfImagesOfFood, hunger_max_value / noOfImagesOfFood, active , true));
+    }
+}
+void PlayingState::drawHungerSystem(sf::RenderWindow &window) {
+    for (int i = 0;i < hunger.size();i++) {
+        hunger[i]->draw(window);
+    }
+}
+void PlayingState::updateHungerSystem(float dt) {
+    for (int i = 0;i < hunger.size() ;i++) {
+        hunger[i]->update(dt);
+        if ( i != hunger.size() - 1 &&  hunger[i + 1]->getCurrentVal() <=0 ) {
+            hunger[i]->setActive();
+        }
+    }
+    if (foodEatenValue > 0) {
+        int i = 0;
+        float segmentMax = hunger_max_value / noOfImagesOfFood;
+
+        while (foodEatenValue > 0 && i < hunger.size()) {
+            float remaining = segmentMax - hunger[i]->getCurrentVal(); // capture BEFORE reset
+
+            if (remaining <= 0) {
+                // segment already full, nothing to do here
+                i++;
+                continue;
+            }
+
+            if (foodEatenValue >= remaining) {
+                hunger[i]->reset(segmentMax);
+                foodEatenValue -= remaining;
+            }
+            else {
+                hunger[i]->reset(hunger[i]->getCurrentVal() + foodEatenValue);
+                foodEatenValue = 0;
+                hunger[i]->setActive();
+            }
+            i++;
+        }
+        foodEatenValue = 0; // discard any leftover if hunger is already full
+    }
+    hunger[hunger.size() - 1]->setActive();
+}
+
+
+void PlayingState::spawnTemperatureSystem() {
+    temperature_max_value = configData.count("temperature_max_value") ? configData["temperature_max_value"] : 0;
+    noOfImagesOfSnowFlake = configData.count("no_of_sprites_in_temperature_spritesheet") ? static_cast<int>(configData["no_of_sprites_in_temperature_spritesheet"]) : 0;
+    sf::Vector2f firstSnowflakePos = sf::Vector2f(windowSize.x / 2, windowSize.y / 2) - sf::Vector2f(20, 70);
+
+    for (int i = 0;i < 3;i++) {
+        bool active = i == (0);
+        temperature.push_back(std::make_unique<SurvivalStat>(textureHolder.get(TextureID::Snowflake), sf::Vector2f(i, 0), firstSnowflakePos, noOfImagesOfSnowFlake, temperature_max_value / noOfImagesOfSnowFlake,active , false));
+    }
+}
+void PlayingState::drawTemperatureSystem(sf::RenderWindow& window) {
+    for (int i = 0;i < temperature.size();i++) {
+        temperature[i]->draw(window);
+    }
+}
+void PlayingState::updateTemperatureSystem(float dt) {
+    freezingMode = true;
+    float segmentMax = temperature_max_value / noOfImagesOfSnowFlake;
+    if (player->getVisibility()) {
+        freezingMode = false;
+    }
+    for (int i = temperature.size()-1;i >=0;i--) {
+        if (freezingMode) {
+            temperature[i]->update(dt);
+            if (i != 0 && temperature[i - 1]->getCurrentVal() <= 0) {
+                temperature[i]->setActive();
+            }
+        }
+        else {
+            temperature[i]->setIncreasingValueMode(true);
+            temperature[i]->update(-dt);
+            temperature[i]->setIncreasingValueMode(false);
+            if ( temperature[i]->getCurrentVal() >= segmentMax) {
+                continue;
+            }
+            else {
+                temperature[i]->setActive();
+                break;
+            }
+        }
+    }
+    if(freezingMode) temperature[0]->setActive();
+}
+
+//covering all possible deaths
+
+void PlayingState::playerCobbCollision() {
+    sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
+    sf::FloatRect cobbRect = cobb->getCobbSprite().getGlobalBounds();
+    if (playerRect.findIntersection(cobbRect)) {
+        gameOver = "jumpscare";
+    }
+}
+void PlayingState::playerFreezesOrDiesOfHunger() {
+    if (temperature[temperature.size() - 1]->getCurrentVal() <= 0) {
+        gameOver = "froze";
+    }
+    if (hunger[0]->getCurrentVal() <= 0) {
+        gameOver = "starved";
+    }
+}
+void PlayingState::furnaceBurns() {
+    sf::FloatRect furnaceRect = furnace->getSprite().getGlobalBounds();
+    for (int i = 0;i < items.size();i++) {
+        Stone* stone = dynamic_cast<Stone*>(items[i].get());
+        if (stone != nullptr && stone->getIsOnAir()) continue;
+        sf::FloatRect itemRect = items[i]->getSprite().getGlobalBounds();
+        itemRect.position = items[i]->getPosition();
+        if (itemRect.findIntersection(furnaceRect)) {
+            items[i]->setIsOnFurnace();
+        }
+    }
+    sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
+    if (playerRect.findIntersection(furnaceRect)) {
+        gameOver = "burned";
     }
 }

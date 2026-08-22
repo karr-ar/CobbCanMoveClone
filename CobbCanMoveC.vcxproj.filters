@@ -54,10 +54,13 @@
     <ClCompile Include="Furnace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="JumpScareState.cpp">
+    <ClCompile Include="DeathState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Smell.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SurvivalStat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,10 +110,13 @@
     <ClInclude Include="Furnace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="JumpScareState.h">
+    <ClInclude Include="DeathState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Smell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SurvivalStat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

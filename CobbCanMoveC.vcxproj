@@ -152,13 +152,14 @@
     <ClCompile Include="Furnace.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Item.cpp" />
-    <ClCompile Include="JumpScareState.cpp" />
+    <ClCompile Include="DeathState.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayingState.cpp" />
     <ClCompile Include="Smell.cpp" />
     <ClCompile Include="Stone.cpp" />
+    <ClCompile Include="SurvivalStat.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
@@ -170,7 +171,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="Item.h" />
-    <ClInclude Include="JumpScareState.h" />
+    <ClInclude Include="DeathState.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayingState.h" />
@@ -178,6 +179,7 @@
     <ClInclude Include="ResourceIdentifiers.h" />
     <ClInclude Include="Smell.h" />
     <ClInclude Include="Stone.h" />
+    <ClInclude Include="SurvivalStat.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ResourceHolder.inl" />

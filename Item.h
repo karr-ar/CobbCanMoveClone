@@ -21,6 +21,8 @@ private:
 
 	bool isOnFurnace = false;
 
+	std::string itemType = "";
+
 public:
 
 	// MUST add a virtual destructor for safe inheritance
@@ -51,6 +53,9 @@ public:
 
 	bool getDeleteItem();
 	void setDeleteItem();
+
+	void setItemType(std::string type);
+	std::string getItemType();
 
 	void setIsOnFurnace();
 };

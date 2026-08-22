@@ -19,6 +19,7 @@ class Cobb :
     sf::Vector2f lastHeardPosition;
     bool cobbsHearingRetention = false;
 
+    float cobbNormalSpeed;
     float cobbInvestigationSpeed;
     float cobbChasingSpeed;
     float cobbScaledBy;
