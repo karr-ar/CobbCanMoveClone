@@ -35,18 +35,19 @@ Game::Game() {
 	textureHolder.load(TextureID::Carrot, "sprites/graphics/carrot.PNG");
 	textureHolder.load(TextureID::Carrot2, "sprites/graphics/carrott.PNG");
 	textureHolder.load(TextureID::Snowflake, "sprites/graphics/snowflake.PNG");
+	textureHolder.load(TextureID::Coal, "sprites/graphics/coal2.PNG");
+	textureHolder.load(TextureID::Breaker, "sprites/graphics/breaker.PNG");
 	//Resource initialization (sounds)
 
 	//Resource initialization (Fonts)
-
+	pressStartFont.openFromFile("sprites/fonts/PressStart2P-Regular.ttf");
 
 	// hand the whole config map + window size down to the first state
-	currentState = std::make_unique<PlayingState>(configData, windowSize, textureHolder);
+	currentState = std::make_unique<PlayingState>(configData, windowSize, textureHolder, 10, 6 , pressStartFont);
 }
 
 void Game::run() {
 	sf::Clock clock;
-	srand((int)time(0));
 	//
 	while (window.isOpen()) {
 		while (const std::optional<sf::Event> event = window.pollEvent()) {

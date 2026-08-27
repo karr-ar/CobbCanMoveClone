@@ -4,6 +4,13 @@
 #include "cmath"
 #include "Player.h"
 #include "Smell.h"
+
+enum class InvestigationState {
+    Moving,
+    Searching,
+    Finished
+};
+
 class Cobb :
     public Entity
 {
@@ -31,9 +38,15 @@ class Cobb :
     float least_score_that_will_enrage_cobb;
     bool isCobbEnragedDueToSmell = false;
 
+    bool cobbInvestigates = false;
+    float searchingTime;
+    float searchTimeCounter;
+    InvestigationState investState;
+    sf::Vector2f positionToFollow;
+
 public:
     Cobb(sf::Texture &cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction, float cobbScaledBy, float cobbsVisualRadius
-                                                                        , float cobb_smell_radius , float least_score_that_will_enrage_cobb);
+                                                                        , float cobb_smell_radius , float least_score_that_will_enrage_cobb , float searchingTime);
     void setSprite(sf::Texture cobbTexture);
     sf::Vector2f update(float dt);
     void draw(sf::RenderWindow& window);
@@ -53,5 +66,8 @@ public:
 
     void setScentRetentionAndLastPositionSmelled(const std::vector<std::unique_ptr<Smell>> &scent);
     void cobbFollowsLastSmelledPosition();
+
+    void cobbsInvestigationMechanics();
+    void startInvestigation(sf::Vector2f targetPos);
 };
 

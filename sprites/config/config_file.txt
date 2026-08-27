@@ -34,3 +34,4 @@ number_of_carrots 12
 hunger_decreased_by_carrot 8
 temperature_max_value 20
 no_of_sprites_in_temperature_spritesheet 8
+searching_time 3

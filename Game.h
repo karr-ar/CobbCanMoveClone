@@ -22,4 +22,5 @@ private:
 	std::unordered_map<std::string, float> configData; 
 	std::unique_ptr<GameState> currentState;
 	ResourceHolder<TextureID, sf::Texture> textureHolder; 
+	sf::Font pressStartFont;
 };

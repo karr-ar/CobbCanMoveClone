@@ -1,7 +1,7 @@
 #include "Cobb.h"
 #include <iostream>
 Cobb::Cobb(sf::Texture& cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction,float cobbScaledBy, float cobbsVisualRadius
-																					, float cobb_smell_radius, float least_score_that_will_enrage_cobb) :cobbSprite(cobbTexture),
+																					, float cobb_smell_radius, float least_score_that_will_enrage_cobb, float searchingTime) :cobbSprite(cobbTexture),
 Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 14 }, 0.1, sf::Vector2u(14, 1)) {
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
 	cobbSprite.setOrigin(sf::Vector2f(cobbAnimation.getXyRect().size.x/2, cobbAnimation.getXyRect().size.y / 2));
@@ -15,6 +15,8 @@ Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 14 }, 0.1, s
 
 	this->cobb_smell_radius = cobb_smell_radius;
 	this->least_score_that_will_enrage_cobb = least_score_that_will_enrage_cobb;
+
+	this->searchingTime = searchingTime;
 
 }
 void Cobb::setPosition(sf::Vector2f position) {
@@ -54,6 +56,9 @@ void Cobb::RandomMovement(sf::Vector2f nextRandomPos) {
 	
 	if (sqrt(pow(getPosition().x-cobbsNewLocation.x,2)+ pow(getPosition().y - cobbsNewLocation.y, 2)) < 5 ){
 		updateCobbsPosition = true;
+		if ((rand() % 100) < 40) {
+			startInvestigation(cobbsNewLocation);
+		}
 	}
 }
 sf::Vector2f Cobb::update(float dt) {
@@ -66,6 +71,11 @@ sf::Vector2f Cobb::update(float dt) {
 	else {
 		cobbSprite.setScale(sf::Vector2f(-1.5, 1.5));
 	}
+
+	if (cobbInvestigates && investState == InvestigationState::Searching) {
+		searchTimeCounter -= dt;
+	}
+
 	return dt * getDirection() * getVelocity();
 }
 void Cobb::draw(sf::RenderWindow &window) {
@@ -84,6 +94,7 @@ void Cobb::cobbCanSee() {
 		followTheGivenPosition(lastSeenPosition);
 		if ((this->getPosition() - lastSeenPosition).length() < 5) {
 			cobbsVisualRetention = false;
+			startInvestigation(lastSeenPosition);
 	}
 }
 void Cobb::canCobbSeeThePlayer(sf::Vector2f playerPos, bool isPlayerVisible) {
@@ -111,9 +122,13 @@ void Cobb::chooseMovement(sf::Vector2f nextRandomPos) {
 			this->setVelocity(cobbChasingSpeed);
 		}
 		else {
-			this->setVelocity(cobbInvestigationSpeed);
+			this->setVelocity(cobbNormalSpeed);
 		}
 		cobbFollowsLastSmelledPosition();
+	}
+	else if (cobbInvestigates) {
+		this->setVelocity(cobbInvestigationSpeed);
+		cobbsInvestigationMechanics();
 	}
 	else {
 		this->setVelocity(cobbNormalSpeed);
@@ -130,6 +145,7 @@ void Cobb::cobbFollowsLastHeardPosition(){
 	followTheGivenPosition(lastHeardPosition);
 	if ((this->getPosition() - lastHeardPosition).length() < 5) {
 		cobbsHearingRetention = false;
+		startInvestigation(lastHeardPosition);
 	}
 }
 void Cobb::setScentRetentionAndLastPositionSmelled(const std::vector<std::unique_ptr<Smell>>& scent) {
@@ -142,7 +158,7 @@ void Cobb::setScentRetentionAndLastPositionSmelled(const std::vector<std::unique
 		for (int i = 1;i < scent.size();i++) {
 			if ((getPosition() - scent[i]->getPosition()).length() < minDistanceDiffBetweenScentAndCobb) {
 				minDistanceDiffBetweenScentAndCobb = (getPosition() - scent[i]->getPosition()).length();
-				idx = 0;
+				idx = i;
 			}
 		}
 		if (minDistanceDiffBetweenScentAndCobb <= cobb_smell_radius) {
@@ -166,5 +182,32 @@ void Cobb::cobbFollowsLastSmelledPosition() {
 	if ((this->getPosition() - lastPositionSmelled).length() < 10) {
 		scentRetention = false;
 		isCobbEnragedDueToSmell = false;
+		startInvestigation(lastPositionSmelled);
 	}
+}
+void Cobb::cobbsInvestigationMechanics() {
+	switch (investState) {
+	case InvestigationState::Moving:
+		followTheGivenPosition(positionToFollow);
+		if ((this->getPosition() - positionToFollow).length() < 5) {
+			investState = InvestigationState::Searching;
+			searchTimeCounter = searchingTime;
+		}
+		break;
+	case InvestigationState::Searching:
+		this->setDirection(0.0f, 0.0f);
+		if (searchTimeCounter <= 0) {
+			investState = InvestigationState::Finished;
+		}
+		break;
+	case InvestigationState::Finished:
+		cobbInvestigates = false;
+		break;
+	}
+}
+void Cobb::startInvestigation(sf::Vector2f targetPos) {
+	positionToFollow = targetPos;
+	investState = InvestigationState::Moving;
+	searchTimeCounter = searchingTime;
+	cobbInvestigates = true;
 }

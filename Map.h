@@ -16,9 +16,13 @@ public:
 	std::vector <sf::Vector2f> getCobbsAllowablePositions();
 	std::vector <sf::Vector2f> getWalls2();
 	std::vector <Escalator> getEscalator();
+	std::vector<sf::Vector2f > getBreakerPositions();
+	void deleteBreaker(int idx);
 	// update function and a boolean vector which will tell whether to draw a certain area or not based on how far the user is to it
 
 	sf::Vector2f getFurnacePos();
+
+	const std::vector<sf::Vector2f>& getItemSpawnPositions() const;
 
 private:
 	std::vector <sf::Vector2f> walls;
@@ -30,6 +34,8 @@ private:
 	sf::Vector2f playerInitialPos;
 	sf::Vector2f cobbInitialPos;
 	std::vector <sf::Vector2f> cobbsAllowablePositions;
+	std::vector<sf::Vector2f > breakerPositions;
+	std::vector<sf::Vector2f> itemSpawnPositions;
 
 	sf::Vector2f furnacePos;
 

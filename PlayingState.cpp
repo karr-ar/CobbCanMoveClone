@@ -2,9 +2,12 @@
 #include <iostream>
 
 PlayingState::PlayingState(const std::unordered_map<std::string, float>& config, sf::Vector2f winSize,
-                                        ResourceHolder<TextureID, sf::Texture>& textureHolder)
-    : configData(config), windowSize(winSize) ,  textureHolder(textureHolder)
+                                        ResourceHolder<TextureID, sf::Texture>& textureHolder , int noOfCoals, int noOfBreakers, sf::Font& pressStartFont)
+    : configData(config), windowSize(winSize) ,  textureHolder(textureHolder) ,pressStartFont(pressStartFont), coalText(pressStartFont), breakerText(pressStartFont)
 {
+    this->noOfCoals = noOfCoals;
+    this->noOfBreakers = noOfBreakers;
+    
     //load Config Data
     float cobbsNormalSpeed = configData.count("cobbs_normal_speed") ? configData["cobbs_normal_speed"] : 0;
     float cobbsInvestigationSpeed = configData.count("cobbs_investigation_speed") ? configData["cobbs_investigation_speed"] : 0;
@@ -14,6 +17,7 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
     float least_score_that_will_enrage_cobb = configData.count("least_score_that_will_enrage_cobb") ? configData["least_score_that_will_enrage_cobb"] : 0;
     float cobb_smell_radius = configData.count("cobb_smell_radius") ? configData["cobb_smell_radius"] : 0;
+    float searching_time = configData.count("searching_time") ? configData["searching_time"] : 0;
 
     float playerSpeed = configData.count("players_speed") ? configData["players_speed"] : 0;
     float playerWalkingNoiseRadius = configData.count("players_walking_noise_radius") ? configData["players_walking_noise_radius"] : 0;
@@ -49,9 +53,10 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
     //cobb Initialize
     cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
-                                                                                                        ,cobb_smell_radius,least_score_that_will_enrage_cobb);
+                                                                                                        ,cobb_smell_radius,least_score_that_will_enrage_cobb , searching_time);
 
     spawnItems();
+    spawnBreakers();
 
     view.setCenter(player->getPosition());
     view.setSize(windowSize);
@@ -63,6 +68,21 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
     spawnHungerSystem();
     spawnTemperatureSystem();
+
+    //setting texts
+    if (noOfCoals > 0) {
+        coalText.setString("Coals Delivered : " + std::to_string(noOfCoalsBurned) +"/"+ std::to_string(noOfCoals));
+        coalText.setCharacterSize(16);
+        coalText.setPosition(sf::Vector2f(30,30));
+        coalText.setFillColor(sf::Color::White);
+    }
+    if (noOfBreakers > 0) {
+        breakerText.setString("Breakers Flipped : " + std::to_string(noOfBreakersFlipped) + "/" + std::to_string(noOfBreakers));
+        breakerText.setCharacterSize(16);
+        breakerText.setPosition(sf::Vector2f(30, 60));
+        breakerText.setFillColor(sf::Color::White);
+    }
+    
 }
 void PlayingState::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
     if (const auto* resized = event.getIf<sf::Event::Resized>()) {
@@ -122,7 +142,16 @@ void PlayingState::update(float dt) {
     updateItems(dt);
     deleteItems();
 
+    updateBreakers(dt);
+
     view.setCenter(player->getPosition()); //for now the camera is rigid but ill fix it  later
+
+    if (noOfCoals > 0) {
+        coalText.setString("Coals Delivered : " + std::to_string(noOfCoalsBurned) + "/" + std::to_string(noOfCoals));
+    }
+    if (noOfBreakers > 0) {
+        breakerText.setString("Breakers Flipped : " + std::to_string(noOfBreakersFlipped) + "/" + std::to_string(noOfBreakers));
+    }
 }
 
 void PlayingState::render(sf::RenderWindow& window) {
@@ -132,6 +161,8 @@ void PlayingState::render(sf::RenderWindow& window) {
     drawEscalator(window);
     
     drawItems(window);
+    drawBreakers(window);
+
     player->draw(window);
     player->drawPlayersEquippedItem(window);
     //drawing furnace after everything else cuz even if it takes time to delete it should atleast hide for a while
@@ -219,6 +250,10 @@ void PlayingState::render(sf::RenderWindow& window) {
     drawHungerSystem(window);
     drawTemperatureSystem(window);
 
+    //displaying texts
+    window.draw(coalText);
+    window.draw(breakerText);
+
     window.display();
 }
 
@@ -290,7 +325,7 @@ void PlayingState::spawnItems() {
     float escalator_speed = configData.count("escalator_speed") ? configData["escalator_speed"] : 0;
 
 
-    std::vector<sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
+    std::vector<sf::Vector2f>  itemSpawnPositions = map->getItemSpawnPositions();
     float generalItemsEquipNoiseRadius = configData.count("items_equip_noise_radius") ? configData["items_equip_noise_radius"] : 0;
     float generalItemsUnEquipNoiseRadius = configData.count("items_unequip_noise_radius") ? configData["items_unequip_noise_radius"] : 0;
     float general_item_luminosity_radius = configData.count("luminosity_radius") ? configData["luminosity_radius"] : 0;
@@ -300,7 +335,7 @@ void PlayingState::spawnItems() {
     float candles_luminosity_radius = configData.count("candles_luminosity_radius") ? configData["candles_luminosity_radius"] : 0;
 
     for (int i = 0; i < no_of_candles; i++) {
-        items.push_back(std::make_unique<Candle>(candles_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Candle), generalItemsEquipNoiseRadius, generalItemsUnEquipNoiseRadius,escalator_speed));
+        items.push_back(std::make_unique<Candle>(candles_luminosity_radius, itemSpawnPositions[rand() % itemSpawnPositions.size()], textureHolder.get(TextureID::Candle), generalItemsEquipNoiseRadius, generalItemsUnEquipNoiseRadius,escalator_speed));
     }
 
     //spawning rocks
@@ -311,15 +346,41 @@ void PlayingState::spawnItems() {
     float stones_horizontal_velocity = configData.count("stones_horizontal_velocity") ? configData["stones_horizontal_velocity"] : 0;
 
     for (int i = 0; i < no_of_rocks; i++) {
-        items.push_back(std::make_unique<Stone>(general_item_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Stone), generalItemsEquipNoiseRadius, stones_unequip_noise_radius, stones_initial_upward_velocity, stones_downward_acceleration, stones_horizontal_velocity, escalator_speed));
+        items.push_back(std::make_unique<Stone>(general_item_luminosity_radius, itemSpawnPositions[rand() % itemSpawnPositions.size()], textureHolder.get(TextureID::Stone), generalItemsEquipNoiseRadius, stones_unequip_noise_radius, stones_initial_upward_velocity, stones_downward_acceleration, stones_horizontal_velocity, escalator_speed));
     }
 
     //spawning carrots
     int number_of_carrots = configData.count("number_of_carrots") ? static_cast<int>(configData["number_of_carrots"]) : 0;
     for (int i = 0;i < number_of_carrots;i++) {
-        items.push_back(std::make_unique<Item>(general_item_luminosity_radius, cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()], textureHolder.get(TextureID::Carrot2), generalItemsEquipNoiseRadius, 0, escalator_speed));
+        items.push_back(std::make_unique<Item>(general_item_luminosity_radius, itemSpawnPositions[rand() % itemSpawnPositions.size()], textureHolder.get(TextureID::Carrot2), generalItemsEquipNoiseRadius, 0, escalator_speed));
         items[items.size() - 1]->setItemType("Carrot");
-        items[items.size() - 1]->getSprite().setOrigin(sf::Vector2f(items[items.size() - 1]->getSprite().getTexture().getSize().x / 2, items[items.size() - 1]->getSprite().getTexture().getSize().y / 2));
+    }
+
+    //spawning coals
+    for (int i = 0;i < noOfCoals;i++) {
+        items.push_back(std::make_unique<Item>(general_item_luminosity_radius, itemSpawnPositions[rand() % itemSpawnPositions.size()], textureHolder.get(TextureID::Coal), generalItemsEquipNoiseRadius, generalItemsUnEquipNoiseRadius, escalator_speed));
+        items[items.size() - 1]->setItemType("Coal");
+    }
+
+    
+}
+void PlayingState::spawnBreakers() {
+    for (int i = 0;i < noOfBreakers;i++) {
+        int idx = rand() % map->getBreakerPositions().size();
+        breakers.push_back(Breaker(textureHolder.get(TextureID::Breaker), map->getBreakerPositions()[idx]));
+        map->deleteBreaker(idx);
+    }
+}
+
+void PlayingState::drawBreakers(sf::RenderWindow& window) {
+    for (int i = 0;i < breakers.size();i++) {
+        breakers[i].draw(window);
+    }
+}
+
+void PlayingState::updateBreakers(float dt) {
+    for (int i = 0;i < breakers.size();i++) {
+        breakers[i].update(dt);
     }
 }
 
@@ -412,7 +473,6 @@ void PlayingState::drawEscalator(sf::RenderWindow& window) {
 void PlayingState::escalatorMovesAnythingOnIt() {
     for (int i = 0;i < items.size();i++) {
         sf::FloatRect itemRect = items[i]->getSprite().getGlobalBounds();
-        itemRect.position = items[i]->getPosition();
         for (int j = 0;j < escalator->size(); j++) {
             sf::FloatRect escalatorRect = escalator->at(j).getSprite().getGlobalBounds();
             auto intersection = itemRect.findIntersection(escalatorRect);
@@ -427,7 +487,7 @@ void PlayingState::escalatorMovesAnythingOnIt() {
         for (int j = 0;j < escalator->size(); j++) {
             sf::FloatRect escalatorRect = escalator->at(j).getSprite().getGlobalBounds();
             auto intersection = playerRect.findIntersection(escalatorRect);
-            if (intersection.has_value() && intersection->size.x >= playerRect.size.x / 3.0f ) {
+            if (intersection.has_value() && intersection->size.x >= playerRect.size.x / 2.0f ) {
                 player->setIsOnEscalatorToTrue();
                 break;
             }
@@ -584,9 +644,9 @@ void PlayingState::furnaceBurns() {
         Stone* stone = dynamic_cast<Stone*>(items[i].get());
         if (stone != nullptr && stone->getIsOnAir()) continue;
         sf::FloatRect itemRect = items[i]->getSprite().getGlobalBounds();
-        itemRect.position = items[i]->getPosition();
         if (itemRect.findIntersection(furnaceRect)) {
             items[i]->setIsOnFurnace();
+            if (items[i]->getItemType() == "Coal")noOfCoalsBurned++;
         }
     }
     sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();

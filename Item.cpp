@@ -28,6 +28,9 @@ Item::Item(float luminosityRadius,sf::Vector2f position, sf::Texture& texture, f
 	this->equipNoiseRadius = equipNoiseRadius;
 	this->unequipNoiseRadius = unequipNoiseRadius;
 	this->escalatorSpeed = escalatorSpeed;
+
+	itemSprite.setOrigin(sf::Vector2f(texture.getSize().x / 2.f, texture.getSize().y / 2.f));
+	itemSprite.setPosition(position);
 }
 sf::Sprite& Item::getSprite() {
 	return itemSprite;

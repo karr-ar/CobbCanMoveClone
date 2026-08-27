@@ -17,6 +17,7 @@ Map::Map(std::string textPath, sf::Texture &wallTexture, sf::Texture &tileTextur
 			else if ((map[i][j]) == 'T') {
 				tiles.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+				itemSpawnPositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 			}
 			else if ((map[i][j]) == 'P') {
 				tiles.push_back(sf::Vector2f(j * sizeX, i * sizeY));
@@ -46,6 +47,11 @@ Map::Map(std::string textPath, sf::Texture &wallTexture, sf::Texture &tileTextur
 			else if (map[i][j] == 'e') {
 				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 				secondTileType.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+			}
+			else if (map[i][j] == 'B') {
+				cobbsAllowablePositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+				walls.push_back(sf::Vector2f(j * sizeX, i * sizeY));
+				breakerPositions.push_back(sf::Vector2f(j * sizeX, i * sizeY));
 			}
 		}
 	}
@@ -99,4 +105,11 @@ std::vector <Escalator> Map::getEscalator() {
 }
 sf::Vector2f Map::getFurnacePos() {
 	return furnacePos;
+}
+const std::vector<sf::Vector2f>& Map::getItemSpawnPositions() const { return itemSpawnPositions; }
+std::vector<sf::Vector2f > Map::getBreakerPositions() {
+	return breakerPositions;
+}
+void Map::deleteBreaker(int idx) {
+	breakerPositions.erase(breakerPositions.begin() + idx);
 }

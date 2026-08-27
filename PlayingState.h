@@ -11,11 +11,12 @@
 #include "Furnace.h"
 #include "Smell.h"
 #include "SurvivalStat.h"
+#include "Breaker.h"
 
 class PlayingState : public GameState {
 public:
     PlayingState(const std::unordered_map<std::string, float>& configData, sf::Vector2f windowSize,
-                                                ResourceHolder<TextureID, sf::Texture>& textureHolder);
+                                                ResourceHolder<TextureID, sf::Texture>& textureHolder, int noOfCoals, int noOfBreakers , sf::Font& pressStartFont);
     void handleEvent(const sf::Event& event, sf::RenderWindow& window) override;
     void handleInputs() override;
     void update(float dt) override;
@@ -54,6 +55,9 @@ private:
     void playerCobbCollision();
     void furnaceBurns();         // this one is not only for player but also for items
 
+    void spawnBreakers();
+    void drawBreakers(sf::RenderWindow& window);
+    void updateBreakers(float dt);
 
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
@@ -88,4 +92,15 @@ private:
     std::string gameOver = ""; //shouldnt be simple and plain like this i gotta work for different animations on different deaths
 
     std::vector<std::unique_ptr<Smell>> scent;
+
+
+    //everything related to coals and breakers 
+    sf::Font& pressStartFont;
+    int noOfCoals;
+    int noOfBreakers;
+    int noOfCoalsBurned = 0;
+    int noOfBreakersFlipped =0;
+    sf::Text coalText;
+    sf::Text breakerText;
+    std::vector <Breaker> breakers;
 };
