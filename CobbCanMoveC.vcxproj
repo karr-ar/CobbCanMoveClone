@@ -156,6 +156,7 @@
     <ClCompile Include="DeathState.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="MenuState.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayingState.cpp" />
     <ClCompile Include="Smell.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="Item.h" />
     <ClInclude Include="DeathState.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="MenuState.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayingState.h" />
     <ClInclude Include="ResourceHolder.hpp" />

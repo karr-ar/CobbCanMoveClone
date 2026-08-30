@@ -43,7 +43,7 @@ Game::Game() {
 	pressStartFont.openFromFile("sprites/fonts/PressStart2P-Regular.ttf");
 
 	// hand the whole config map + window size down to the first state
-	currentState = std::make_unique<PlayingState>(configData, windowSize, textureHolder, 10, 6 , pressStartFont);
+	currentState = std::make_unique<MenuState>(configData, windowSize, textureHolder , pressStartFont);
 }
 
 void Game::run() {
@@ -63,8 +63,13 @@ void Game::run() {
 
 		//
 		currentState->render(window);
+		if (currentState->isFinished() == "quit") {
+			window.close();
+		}
+		else if (currentState->isFinished() == "continue") {
 
-		if (currentState->isFinished() == "jumpscare") {
+		}
+		else if (currentState->isFinished() == "jumpscare") {
 			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::JumpScare), configData, windowSize ,21, 0.05);
 		}
 		else if (currentState->isFinished() == "froze") {

@@ -6,6 +6,7 @@
 #include "GameState.h"
 #include "ResourceHolder.hpp"
 #include "ResourceIdentifiers.h"
+#include "MenuState.h"
 
 class Game {
 public:

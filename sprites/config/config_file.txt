@@ -15,7 +15,6 @@ items_unequip_noise_radius 500
 players_walking_noise_radius 200
 amount_of_darkness(range[0-255]) 245
 number_of_rocks 16
-stones_unequip_noise_radius 99999
 stones_initial_upward_velocity 1500
 stones_downward_acceleration -2500
 stones_horizontal_velocity 500 

@@ -92,7 +92,21 @@ void PlayingState::handleEvent(const sf::Event& event, sf::RenderWindow& window)
     }
     if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
         if (keyPressed->scancode == player->getEquipButton()) {
-            player->equipItem(items);
+            bool pressedInteractButton = false;
+            for (int i = 0; i < breakers.size(); i++) {
+                if (breakers[i].getPlayerNearBreaker() && !breakers[i].getFlipped()) {
+                    breakers[i].flipBreaker();
+                    noOfBreakersFlipped++;
+                    pressedInteractButton = true;
+                    //cobb must follow this position whenever breaker is flipped without any (radius) condition
+                    cobb->setCobbsHearingRetention();
+                    cobb->setCobbsLastHeardPosition(breakers[i].getBreakerSprite().getPosition());
+                    break;
+                }
+            }
+            if (!pressedInteractButton) {
+                player->equipItem(items);
+            }
         }
     }
 }
@@ -142,6 +156,7 @@ void PlayingState::update(float dt) {
     updateItems(dt);
     deleteItems();
 
+    playerBreakerCollision();
     updateBreakers(dt);
 
     view.setCenter(player->getPosition()); //for now the camera is rigid but ill fix it  later
@@ -169,7 +184,6 @@ void PlayingState::render(sf::RenderWindow& window) {
     furnace->draw(window);
     
     cobb->draw(window);
-    
 
     float darknessLevel = configData.count("amount_of_darkness(range[0-255])") ? configData["amount_of_darkness(range[0-255])"] : 0;
     lightMapTexture.clear(sf::Color(0, 0, 0, darknessLevel));
@@ -223,6 +237,10 @@ void PlayingState::render(sf::RenderWindow& window) {
         lightMapTexture.draw(lightGlow, eraser);
     }
 
+    for (int i = 0;i < breakers.size();i++) {
+        lightGlow.setPosition(breakers[i].getBreakerSprite().getPosition());
+        lightMapTexture.draw(lightGlow, eraser);
+    }
 
     float playerGlowRadius = configData.count("players_glow_radius") ? configData["players_glow_radius"] : 0;
     float scaleFactor = playerGlowRadius / radiusOfLightMaskTexture;
@@ -340,7 +358,7 @@ void PlayingState::spawnItems() {
 
     //spawning rocks
     int no_of_rocks = configData.count("number_of_rocks") ? static_cast<int>(configData["number_of_rocks"]) : 0;
-    float stones_unequip_noise_radius = configData.count("stones_unequip_noise_radius") ? configData["stones_unequip_noise_radius"] : 0;
+    float stones_unequip_noise_radius = 0;         //0 because it can be heard in the entire map and i wont even check the radius when player throws stone as cobb will always follow that position without any radius check
     float stones_initial_upward_velocity = configData.count("stones_initial_upward_velocity") ? configData["stones_initial_upward_velocity"] : 0;
     float stones_downward_acceleration = configData.count("stones_downward_acceleration") ? configData["stones_downward_acceleration"] : 0;
     float stones_horizontal_velocity = configData.count("stones_horizontal_velocity") ? configData["stones_horizontal_velocity"] : 0;
@@ -429,22 +447,45 @@ sf::Texture PlayingState::generateLightMask(int radius) {
     }
     return texture;
 }
-
 void PlayingState::workOnCobbCanHear() {
+    float closestDist = std::numeric_limits<float>::max();
+    sf::Vector2f closestPos;
+    bool heard = false;
+
     for (int i = 0; i < items.size(); i++) {
         if (items[i]->getNoiseActive()) {
             items[i]->setNoiseInactive();
-            if ((cobb->getPosition() - items[i]->getPosition()).length() <= items[i]->getCurrentNoiseRadius()) {
-                cobb->setCobbsHearingRetention();
-                cobb->setCobbsLastHeardPosition(items[i]->getPosition());
+            float dist = (cobb->getPosition() - items[i]->getPosition()).length();
+
+            Stone* stone = dynamic_cast<Stone*>(items[i].get());
+            if (stone != nullptr) {
+                // stones heard everywhere — no radius check, always wins
+                closestDist = 0;
+                closestPos = items[i]->getPosition();
+                heard = true;
                 break;
+            }
+
+            if (dist <= items[i]->getCurrentNoiseRadius() && dist < closestDist) {
+                closestDist = dist;
+                closestPos = items[i]->getPosition();
+                heard = true;
             }
         }
     }
+
+    if (heard) {
+        cobb->setCobbsHearingRetention();
+        cobb->setCobbsLastHeardPosition(closestPos);
+    }
+
     if (player->getIsWalking()) {
-        if ((cobb->getPosition() - player->getPosition()).length() <= player->getPlayersWalkingNoiseRadius()) {
-            cobb->setCobbsHearingRetention();
-            cobb->setCobbsLastHeardPosition(player->getPosition());
+        float playerDist = (cobb->getPosition() - player->getPosition()).length();
+        if (playerDist <= player->getPlayersWalkingNoiseRadius()) {
+            if (!heard || playerDist < closestDist) {
+                cobb->setCobbsHearingRetention();
+                cobb->setCobbsLastHeardPosition(player->getPosition());
+            }
         }
     }
 }
@@ -621,12 +662,31 @@ void PlayingState::updateTemperatureSystem(float dt) {
     if(freezingMode) temperature[0]->setActive();
 }
 
-//covering all possible deaths
+void PlayingState::playerBreakerCollision() {
+    sf::Vector2f playerPos = player->getPosition();
+    for (int i = 0; i < breakers.size(); i++) {
+        float dist = (playerPos - breakers[i].getBreakerSprite().getPosition()).length();
+        bool near = dist < 70.f && !breakers[i].getFlipped();
+        breakers[i].setHighlight(near);
+        breakers[i].setPlayerNearBreaker(near);
+    }
+}
 
+//covering all possible deaths
+// Wherever you compute the hitbox — update the debug shape too
 void PlayingState::playerCobbCollision() {
     sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
     sf::FloatRect cobbRect = cobb->getCobbSprite().getGlobalBounds();
-    if (playerRect.findIntersection(cobbRect)) {
+
+    sf::Vector2f center = cobb->getCobbSprite().getPosition();
+    sf::Vector2f hitboxSize(cobbRect.size.x * 0.6f, cobbRect.size.y * 0.44f);
+
+    sf::FloatRect cobbHitbox(
+        { center.x - hitboxSize.x / 2.f, center.y - hitboxSize.y / 1.65f },
+        hitboxSize
+    );
+
+    if (playerRect.findIntersection(cobbHitbox)) {
         gameOver = "jumpscare";
     }
 }

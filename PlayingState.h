@@ -58,6 +58,7 @@ private:
     void spawnBreakers();
     void drawBreakers(sf::RenderWindow& window);
     void updateBreakers(float dt);
+    void playerBreakerCollision();
 
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
@@ -103,4 +104,5 @@ private:
     sf::Text coalText;
     sf::Text breakerText;
     std::vector <Breaker> breakers;
+
 };
