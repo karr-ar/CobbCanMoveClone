@@ -1,11 +1,13 @@
 #include "Cobb.h"
 #include <iostream>
 Cobb::Cobb(sf::Texture& cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction,float cobbScaledBy, float cobbsVisualRadius
-																					, float cobb_smell_radius, float least_score_that_will_enrage_cobb, float searchingTime) :cobbSprite(cobbTexture),
+		, float cobb_smell_radius, float least_score_that_will_enrage_cobb, float searchingTime , std::unordered_map<Challenges, bool> challenges) :cobbSprite(cobbTexture),
 Entity(velocity, position, direction), cobbAnimation(cobbTexture, { 14 }, 0.1, sf::Vector2u(14, 1)) {
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
 	cobbSprite.setOrigin(sf::Vector2f(cobbAnimation.getXyRect().size.x/2, cobbAnimation.getXyRect().size.y / 2));
 	cobbSprite.setScale(sf::Vector2f(1.5, 1.5));
+
+	this->challenges = challenges;
 
 	this->cobbNormalSpeed = velocity;
 	this->cobbChasingSpeed = cobbChasingSpeed;
@@ -65,11 +67,16 @@ sf::Vector2f Cobb::update(float dt) {
 	
 	cobbAnimation.update(0, dt);
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
-	if (getDirection().x > 0) {
-		cobbSprite.setScale(sf::Vector2f(1.5, 1.5));
+
+	float scale;
+	if (challenges[Challenges::CobbCanChase]) scale = cobbScaledBy;
+	else scale = 1.5;
+
+	if (getDirection().x > 0 ) {
+		cobbSprite.setScale(sf::Vector2f(scale, scale));
 	}
 	else {
-		cobbSprite.setScale(sf::Vector2f(-1.5, 1.5));
+		cobbSprite.setScale(sf::Vector2f(-scale, scale));
 	}
 
 	if (cobbInvestigates && investState == InvestigationState::Searching) {
@@ -109,15 +116,15 @@ void Cobb::canCobbSeeThePlayer(sf::Vector2f playerPos, bool isPlayerVisible) {
 }
 void Cobb::chooseMovement(sf::Vector2f nextRandomPos) {
 
-	if (canCobbSee || cobbsVisualRetention) {
+	if (challenges[Challenges::CobbCanSee] && (canCobbSee || cobbsVisualRetention)) {
 		this->setVelocity(cobbChasingSpeed);
 		cobbCanSee();
 	}
-	else if (cobbsHearingRetention) {
+	else if (challenges[Challenges::CobbCanHear] && cobbsHearingRetention) {
 		this->setVelocity(cobbChasingSpeed);
 		cobbFollowsLastHeardPosition();
 	}
-	else if (scentRetention) {
+	else if (challenges[Challenges::CobbCanSmell] && scentRetention) {
 		if (isCobbEnragedDueToSmell) {
 			this->setVelocity(cobbChasingSpeed);
 		}

@@ -1,12 +1,13 @@
 #include "PlayingState.h"
 #include <iostream>
 
-PlayingState::PlayingState(const std::unordered_map<std::string, float>& config, sf::Vector2f winSize,
-                                        ResourceHolder<TextureID, sf::Texture>& textureHolder , int noOfCoals, int noOfBreakers, sf::Font& pressStartFont)
+PlayingState::PlayingState(const std::unordered_map<std::string, float>& config, sf::Vector2f winSize,ResourceHolder<TextureID, sf::Texture>& textureHolder ,
+    int noOfCoals, int noOfBreakers, sf::Font& pressStartFont, Maps mapp, std::unordered_map<Challenges, bool> &challenges)
     : configData(config), windowSize(winSize) ,  textureHolder(textureHolder) ,pressStartFont(pressStartFont), coalText(pressStartFont), breakerText(pressStartFont)
 {
     this->noOfCoals = noOfCoals;
     this->noOfBreakers = noOfBreakers;
+    this->challenges = challenges;
     
     //load Config Data
     float cobbsNormalSpeed = configData.count("cobbs_normal_speed") ? configData["cobbs_normal_speed"] : 0;
@@ -52,8 +53,18 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 
 
     //cobb Initialize
-    cobb = std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
-                                                                                                        ,cobb_smell_radius,least_score_that_will_enrage_cobb , searching_time);
+    cobbs.push_back( std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
+                                                                                                        ,cobb_smell_radius,least_score_that_will_enrage_cobb , searching_time, challenges));
+    if (challenges.count(Challenges::CobbCanDuplicate) && challenges[Challenges::CobbCanDuplicate]) {
+        cobbs.push_back(std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
+            , cobb_smell_radius, least_score_that_will_enrage_cobb, searching_time, challenges));
+    }
+    else if (challenges.count(Challenges::CobbDuplicateX2) && challenges[Challenges::CobbDuplicateX2]) {
+        cobbs.push_back(std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
+            , cobb_smell_radius, least_score_that_will_enrage_cobb, searching_time, challenges));
+        cobbs.push_back(std::make_unique<Cobb>(textureHolder.get(TextureID::Cobb), cobbsNormalSpeed, cobbsInvestigationSpeed, cobbsChasingSpeed, cobbInitialLoc, sf::Vector2f(0, 0), cobbScaledBy, cobbsVisualRadius
+            , cobb_smell_radius, least_score_that_will_enrage_cobb, searching_time, challenges));
+    }
 
     spawnItems();
     spawnBreakers();
@@ -66,8 +77,8 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
     }
     lightMaskTexture = generateLightMask(radiusOfLightMaskTexture);
 
-    spawnHungerSystem();
-    spawnTemperatureSystem();
+    if(challenges.count(Challenges::YouCanStarve)  && challenges[Challenges::YouCanStarve]) spawnHungerSystem();
+    if (challenges.count(Challenges::YouCanFreeze) && challenges[Challenges::YouCanFreeze]) spawnTemperatureSystem();
 
     //setting texts
     if (noOfCoals > 0) {
@@ -99,8 +110,10 @@ void PlayingState::handleEvent(const sf::Event& event, sf::RenderWindow& window)
                     noOfBreakersFlipped++;
                     pressedInteractButton = true;
                     //cobb must follow this position whenever breaker is flipped without any (radius) condition
-                    cobb->setCobbsHearingRetention();
-                    cobb->setCobbsLastHeardPosition(breakers[i].getBreakerSprite().getPosition());
+                    for (auto & cobb : cobbs) {
+                        cobb->setCobbsHearingRetention();
+                        cobb->setCobbsLastHeardPosition(breakers[i].getBreakerSprite().getPosition());
+                    }
                     break;
                 }
             }
@@ -113,7 +126,9 @@ void PlayingState::handleEvent(const sf::Event& event, sf::RenderWindow& window)
 void PlayingState::handleInputs() {
     player->inputUpdate();
     std::vector<sf::Vector2f> cobbsAllowedPositions = map->getCobbsAllowablePositions();
-    cobb->chooseMovement(cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()]);
+    for (auto& cobb : cobbs) {
+       cobb->chooseMovement(cobbsAllowedPositions[rand() % cobbsAllowedPositions.size()]);
+    }
 }
 void PlayingState::update(float dt) {
     sf::Vector2f offsetPlayer = player->update(dt);
@@ -122,21 +137,26 @@ void PlayingState::update(float dt) {
     player->move(sf::Vector2f(0, offsetPlayer.y));
     playerWallCollision(false);
 
-    updateHungerSystem(dt);
-    updateTemperatureSystem(dt);
+    if (challenges[Challenges::YouCanStarve])  updateHungerSystem(dt);
+    if (challenges[Challenges::YouCanFreeze])  updateTemperatureSystem(dt);
 
     addScent();
     updateScent(dt);
     deleteScent();
 
     player->setVisibility(items,furnace); // constantlly checks for player being under the light source
-    cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
+    for (auto& cobb : cobbs) {
+        cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
+    }
+    
 
     workOnCobbCanHear();
+    for (auto& cobb : cobbs) {
+        cobb->setScentRetentionAndLastPositionSmelled(scent);
 
-    cobb->setScentRetentionAndLastPositionSmelled(scent);
-
-    cobb->move(sf::Vector2f(cobb->update(dt)));
+        cobb->move(sf::Vector2f(cobb->update(dt)));
+    }
+    
 
     //update escalators sprite
     updateEscalator(dt);
@@ -161,6 +181,8 @@ void PlayingState::update(float dt) {
 
     view.setCenter(player->getPosition()); //for now the camera is rigid but ill fix it  later
 
+    tasksCompleted();
+
     if (noOfCoals > 0) {
         coalText.setString("Coals Delivered : " + std::to_string(noOfCoalsBurned) + "/" + std::to_string(noOfCoals));
     }
@@ -183,7 +205,10 @@ void PlayingState::render(sf::RenderWindow& window) {
     //drawing furnace after everything else cuz even if it takes time to delete it should atleast hide for a while
     furnace->draw(window);
     
-    cobb->draw(window);
+    for (auto& cobb : cobbs) {
+        cobb->draw(window);
+    }
+   
 
     float darknessLevel = configData.count("amount_of_darkness(range[0-255])") ? configData["amount_of_darkness(range[0-255])"] : 0;
     lightMapTexture.clear(sf::Color(0, 0, 0, darknessLevel));
@@ -251,8 +276,10 @@ void PlayingState::render(sf::RenderWindow& window) {
     float cobbGlowRadius = configData.count("cobbs_glow_radius") ? configData["cobbs_glow_radius"] : 0;
     scaleFactor = cobbGlowRadius / radiusOfLightMaskTexture;
     lightGlow.setScale(sf::Vector2f(scaleFactor, scaleFactor));
-    lightGlow.setPosition(cobb->getPosition());
-    lightMapTexture.draw(lightGlow, eraser);
+    for (auto& cobb : cobbs) {
+        lightGlow.setPosition(cobb->getPosition());
+        lightMapTexture.draw(lightGlow, eraser);   
+    }
 
     
     scaleFactor = furnace->getLuminosityRadius() / radiusOfLightMaskTexture;
@@ -448,46 +475,50 @@ sf::Texture PlayingState::generateLightMask(int radius) {
     return texture;
 }
 void PlayingState::workOnCobbCanHear() {
-    float closestDist = std::numeric_limits<float>::max();
-    sf::Vector2f closestPos;
-    bool heard = false;
+    for (auto& cobb : cobbs) {
+        float closestDist = std::numeric_limits<float>::max();
+        sf::Vector2f closestPos;
+        bool heard = false;
 
-    for (int i = 0; i < items.size(); i++) {
-        if (items[i]->getNoiseActive()) {
-            items[i]->setNoiseInactive();
-            float dist = (cobb->getPosition() - items[i]->getPosition()).length();
+        for (int i = 0; i < items.size(); i++) {
+            if (items[i]->getNoiseActive()) {
+                items[i]->setNoiseInactive();
 
-            Stone* stone = dynamic_cast<Stone*>(items[i].get());
-            if (stone != nullptr) {
-                // stones heard everywhere — no radius check, always wins
-                closestDist = 0;
-                closestPos = items[i]->getPosition();
-                heard = true;
-                break;
+                float dist = (cobb->getPosition() - items[i]->getPosition()).length();
+
+                Stone* stone = dynamic_cast<Stone*>(items[i].get());
+                if (stone != nullptr) {
+                    // stones heard everywhere — no radius check, always wins
+                    closestDist = 0;
+                    closestPos = items[i]->getPosition();
+                    heard = true;
+                    break;
+                }
+
+                if (dist <= items[i]->getCurrentNoiseRadius() && dist < closestDist) {
+                    closestDist = dist;
+                    closestPos = items[i]->getPosition();
+                    heard = true;
+                }
             }
+        }
 
-            if (dist <= items[i]->getCurrentNoiseRadius() && dist < closestDist) {
-                closestDist = dist;
-                closestPos = items[i]->getPosition();
-                heard = true;
+        if (heard) {
+            cobb->setCobbsHearingRetention();
+            cobb->setCobbsLastHeardPosition(closestPos);
+        }
+
+        if (player->getIsWalking()) {
+            float playerDist = (cobb->getPosition() - player->getPosition()).length();
+            if (playerDist <= player->getPlayersWalkingNoiseRadius()) {
+                if (!heard || playerDist < closestDist) {
+                    cobb->setCobbsHearingRetention();
+                    cobb->setCobbsLastHeardPosition(player->getPosition());
+                }
             }
         }
     }
-
-    if (heard) {
-        cobb->setCobbsHearingRetention();
-        cobb->setCobbsLastHeardPosition(closestPos);
-    }
-
-    if (player->getIsWalking()) {
-        float playerDist = (cobb->getPosition() - player->getPosition()).length();
-        if (playerDist <= player->getPlayersWalkingNoiseRadius()) {
-            if (!heard || playerDist < closestDist) {
-                cobb->setCobbsHearingRetention();
-                cobb->setCobbsLastHeardPosition(player->getPosition());
-            }
-        }
-    }
+    
 }
 void PlayingState::deleteItems() {
     for (int i = 0;i < items.size();i++) {
@@ -558,10 +589,13 @@ void PlayingState::updateScent(float dt) {
 void PlayingState::deleteScent() {
     float cobb_consuming_scent_radius = configData.count("cobb_consuming_scent_radius") ? configData["cobb_consuming_scent_radius"] : 0;
     for (int i = 0;i < scent.size();i++) {
-        if (scent[i]->getToDelete() || (scent[i]->getPosition() - cobb->getPosition()).length() <= cobb_consuming_scent_radius) {
-            scent[i] = nullptr;
-            scent.erase(scent.begin()+i);
-            i--;
+        for (auto& cobb : cobbs) {
+            if (scent[i]->getToDelete() || (scent[i]->getPosition() - cobb->getPosition()).length() <= cobb_consuming_scent_radius) {
+                scent[i] = nullptr;
+                scent.erase(scent.begin() + i);
+                i--;
+                break;
+            }
         }
     }
 }
@@ -675,26 +709,28 @@ void PlayingState::playerBreakerCollision() {
 //covering all possible deaths
 // Wherever you compute the hitbox — update the debug shape too
 void PlayingState::playerCobbCollision() {
-    sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
-    sf::FloatRect cobbRect = cobb->getCobbSprite().getGlobalBounds();
+    for (auto& cobb : cobbs) {
+        sf::FloatRect playerRect = player->getPlayerSprite().getGlobalBounds();
+        sf::FloatRect cobbRect = cobb->getCobbSprite().getGlobalBounds();
 
-    sf::Vector2f center = cobb->getCobbSprite().getPosition();
-    sf::Vector2f hitboxSize(cobbRect.size.x * 0.6f, cobbRect.size.y * 0.44f);
+        sf::Vector2f center = cobb->getCobbSprite().getPosition();
+        sf::Vector2f hitboxSize(cobbRect.size.x * 0.6f, cobbRect.size.y * 0.44f);
 
-    sf::FloatRect cobbHitbox(
-        { center.x - hitboxSize.x / 2.f, center.y - hitboxSize.y / 1.65f },
-        hitboxSize
-    );
+        sf::FloatRect cobbHitbox(
+            { center.x - hitboxSize.x / 2.f, center.y - hitboxSize.y / 1.65f },
+            hitboxSize
+        );
 
-    if (playerRect.findIntersection(cobbHitbox)) {
-        gameOver = "jumpscare";
+        if (playerRect.findIntersection(cobbHitbox)) {
+            gameOver = "jumpscare";
+        }
     }
 }
 void PlayingState::playerFreezesOrDiesOfHunger() {
-    if (temperature[temperature.size() - 1]->getCurrentVal() <= 0) {
+    if (challenges[Challenges::YouCanFreeze] && temperature[temperature.size() - 1]->getCurrentVal() <= 0) {
         gameOver = "froze";
     }
-    if (hunger[0]->getCurrentVal() <= 0) {
+    if (challenges[Challenges::YouCanStarve] && hunger[0]->getCurrentVal() <= 0) {
         gameOver = "starved";
     }
 }
@@ -713,4 +749,8 @@ void PlayingState::furnaceBurns() {
     if (playerRect.findIntersection(furnaceRect)) {
         gameOver = "burned";
     }
+}
+
+void PlayingState::tasksCompleted() {
+    if (noOfCoals == noOfCoalsBurned && noOfBreakers == noOfBreakersFlipped) gameOver = "win";
 }

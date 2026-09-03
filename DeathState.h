@@ -12,7 +12,7 @@ private:
     int noOfSpritesInARow;
     float switchTime;
 public:
-    DeathState(sf::Texture &texture, const std::unordered_map<std::string, float> & configData, sf::Vector2f windowSize , int noOfSpritesInARow , float switchTime );
+    DeathState(sf::Texture &texture, sf::Vector2f windowSize , int noOfSpritesInARow , float switchTime );
     void handleEvent(const sf::Event& event, sf::RenderWindow& window) override;
     void handleInputs() override;
     void update(float dt) override;

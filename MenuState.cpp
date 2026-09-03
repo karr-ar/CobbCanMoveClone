@@ -1,6 +1,5 @@
 #include "MenuState.h"
-MenuState::MenuState(const std::unordered_map<std::string, float>& configData, sf::Vector2f windowSize,
-    ResourceHolder<TextureID, sf::Texture>& textureHolder, sf::Font& pressStartFont) : titleText(pressStartFont), continueText(pressStartFont) , quitText(pressStartFont) ,versionText (pressStartFont) {
+MenuState::MenuState( sf::Vector2f windowSize, sf::Font& pressStartFont , int level) : titleText(pressStartFont), continueText(pressStartFont) , quitText(pressStartFont) ,versionText (pressStartFont) {
 
     float buttonWidth = 230.f;
     float buttonHeight = 60.f;
@@ -21,7 +20,7 @@ MenuState::MenuState(const std::unordered_map<std::string, float>& configData, s
     versionText.setCharacterSize(12);
     versionText.setPosition({ startX + 40 * 5, 60.f * 4});
 
-    continueText.setString("Continue\nLevel 3"); // pull actual level from save data later
+    continueText.setString("Continue\nLevel "+ std::to_string(level)); // pull actual level from save data later
     continueText.setCharacterSize(18);
     sf::FloatRect textRect = continueText.getLocalBounds();
     continueText.setOrigin({

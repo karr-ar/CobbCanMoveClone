@@ -154,6 +154,7 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="DeathState.cpp" />
+    <ClCompile Include="LoadingState.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="MenuState.cpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Breaker.h" />
     <ClInclude Include="Candle.h" />
+    <ClInclude Include="Challenges.h" />
     <ClInclude Include="Cobb.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="Escalator.h" />
@@ -175,6 +177,7 @@
     <ClInclude Include="GameState.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="DeathState.h" />
+    <ClInclude Include="LoadingState.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="MenuState.h" />
     <ClInclude Include="Player.h" />

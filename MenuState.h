@@ -6,8 +6,7 @@ class MenuState :
     public GameState
 {
 public:
-    MenuState(const std::unordered_map<std::string, float>& configData, sf::Vector2f windowSize,
-        ResourceHolder<TextureID, sf::Texture>& textureHolder, sf::Font& pressStartFont);
+    MenuState( sf::Vector2f windowSize, sf::Font& pressStartFont , int level);
     void handleEvent(const sf::Event& event, sf::RenderWindow& window) override;
     void handleInputs() override;
     void update(float dt) override;

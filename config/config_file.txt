@@ -19,7 +19,7 @@ stones_initial_upward_velocity 1500
 stones_downward_acceleration -2500
 stones_horizontal_velocity 500 
 cobbs_investigation_speed 120
-cobbs_scaled_by 2 
+cobbs_scaled_by 2.5 
 escalator_speed 50
 furnace_glow_radius 600
 initial_scent_score 4
@@ -27,10 +27,10 @@ least_score_that_will_enrage_cobb 1.5
 distance_difference_required_for_new_scent 70
 cobb_smell_radius 350
 cobb_consuming_scent_radius 10
-hunger_max_value 20
+hunger_max_value 100
 no_of_sprites_in_food_spritesheet 3
 number_of_carrots 12
-hunger_decreased_by_carrot 8
-temperature_max_value 20
+hunger_decreased_by_carrot 33
+temperature_max_value 100
 no_of_sprites_in_temperature_spritesheet 8
 searching_time 3

@@ -12,11 +12,12 @@
 #include "Smell.h"
 #include "SurvivalStat.h"
 #include "Breaker.h"
+#include "Challenges.h"
 
 class PlayingState : public GameState {
 public:
-    PlayingState(const std::unordered_map<std::string, float>& configData, sf::Vector2f windowSize,
-                                                ResourceHolder<TextureID, sf::Texture>& textureHolder, int noOfCoals, int noOfBreakers , sf::Font& pressStartFont);
+    PlayingState(const std::unordered_map<std::string, float>& configData, sf::Vector2f windowSize,  ResourceHolder<TextureID,
+        sf::Texture>& textureHolder, int noOfCoals, int noOfBreakers , sf::Font& pressStartFont , Maps mapp , std::unordered_map<Challenges, bool> &challenges);
     void handleEvent(const sf::Event& event, sf::RenderWindow& window) override;
     void handleInputs() override;
     void update(float dt) override;
@@ -60,6 +61,8 @@ private:
     void updateBreakers(float dt);
     void playerBreakerCollision();
 
+    void tasksCompleted();
+
 private:
     std::unordered_map<std::string, float> configData; // this state's own copy/reference
     sf::Vector2f windowSize;
@@ -67,7 +70,9 @@ private:
 
     std::unique_ptr<Player> player;
     std::unique_ptr<Map> map;
-    std::unique_ptr<Cobb> cobb;
+    // only incase of duplicate  size will be > 1
+    std::vector<std::unique_ptr<Cobb>> cobbs;
+
     std::vector<std::unique_ptr<Item>> items;
     std::unique_ptr < std::vector <Escalator>> escalator =nullptr;
     std::unique_ptr <Furnace> furnace = nullptr;
@@ -104,5 +109,7 @@ private:
     sf::Text coalText;
     sf::Text breakerText;
     std::vector <Breaker> breakers;
+
+    std::unordered_map<Challenges, bool> challenges;
 
 };

@@ -4,6 +4,7 @@
 #include "cmath"
 #include "Player.h"
 #include "Smell.h"
+#include "Challenges.h"
 
 enum class InvestigationState {
     Moving,
@@ -44,9 +45,11 @@ class Cobb :
     InvestigationState investState;
     sf::Vector2f positionToFollow;
 
+    std::unordered_map<Challenges, bool> challenges;
+
 public:
     Cobb(sf::Texture &cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction, float cobbScaledBy, float cobbsVisualRadius
-                                                                        , float cobb_smell_radius , float least_score_that_will_enrage_cobb , float searchingTime);
+                                                                        , float cobb_smell_radius , float least_score_that_will_enrage_cobb , float searchingTime , std::unordered_map<Challenges, bool> challenges);
     void setSprite(sf::Texture cobbTexture);
     sf::Vector2f update(float dt);
     void draw(sf::RenderWindow& window);

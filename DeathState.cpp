@@ -1,6 +1,6 @@
 #include "DeathState.h"
-DeathState::DeathState(sf::Texture& texture, const std::unordered_map<std::string, float > & configData, sf::Vector2f windowSize
-												,int noOfSpritesInARow, float switchTime) : sprite(texture) ,deathAnimation(texture,{noOfSpritesInARow,1}, switchTime, sf::Vector2u(noOfSpritesInARow,1)) {
+DeathState::DeathState(sf::Texture& texture, sf::Vector2f windowSize,int noOfSpritesInARow,
+									float switchTime):sprite(texture),deathAnimation(texture,{noOfSpritesInARow,1}, switchTime, sf::Vector2u(noOfSpritesInARow,1)) {
 	sprite.setTextureRect(deathAnimation.getXyRect());
 	sprite.setOrigin(sf::Vector2f(deathAnimation.getXyRect().size/2));
 	sprite.setPosition(sf::Vector2f(windowSize.x/2, windowSize.y / 2));
