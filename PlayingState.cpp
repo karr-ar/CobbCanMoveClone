@@ -98,9 +98,36 @@ PlayingState::PlayingState(const std::unordered_map<std::string, float>& config,
 }
 void PlayingState::handleEvent(const sf::Event& event, sf::RenderWindow& window) {
     if (const auto* resized = event.getIf<sf::Event::Resized>()) {
-        sf::Vector2f newSize((float)resized->size.x, (float)resized->size.y);
-        view.setSize(newSize);
-        windowSize = newSize;
+        float windowWidth = static_cast<float>(resized->size.x);
+        float windowHeight = static_cast<float>(resized->size.y);
+
+        // Define your fixed logical game resolution (e.g., your design size or initial config size)
+        float baseWidth = windowSize.x;
+        float baseHeight = windowSize.y;
+
+        float windowAspect = windowWidth / windowHeight;
+        float baseAspect = baseWidth / baseHeight;
+
+        view.setSize({ baseWidth, baseHeight });
+
+        sf::FloatRect viewport({ 0.f, 0.f }, {1.f, 1.f });
+
+        if (windowAspect > baseAspect) {
+            // Window is wider: pillarbox (black bars on the left/right)
+            float viewWidth = baseAspect / windowAspect;
+            viewport.position.x = (1.0f - viewWidth) / 2.f;
+            viewport.size.x = viewWidth;
+        }
+        else {
+            // Window is taller: letterbox (black bars on the top/bottom)
+            float viewHeight = windowAspect / baseAspect;
+            viewport.position.y = (1.0f - viewHeight) / 2.f;
+            viewport.size.y = viewHeight;
+        }
+
+        view.setViewport(viewport);
+        window.setView(view);
+        windowSize = sf::Vector2f(windowWidth, windowHeight);
     }
 
     if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {

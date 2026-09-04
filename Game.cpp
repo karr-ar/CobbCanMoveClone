@@ -165,9 +165,7 @@ void Game::levelGenerator() {
 	findTasks();
 }
 void Game::rollChallenges() {
-	for (auto& pair : challenges) {
-		pair.second = false;
-	}
+	challenges.clear();
 	challenges[Challenges::CobbCanMove] = true;
 	std::vector<Challenges> pool;
 	if (level == 1) return;

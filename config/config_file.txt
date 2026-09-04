@@ -6,8 +6,8 @@ cobbs_normal_speed 150
 number_of_candles 16
 cobbs_chasing_speed 260
 players_speed 290
-window_size_x 1920
-window_size_y 1080
+window_size_x 1280
+window_size_y 720
 radius_of_lightMaskTexture 70 
 cobbs_visual_radius 650
 items_equip_noise_radius 500
