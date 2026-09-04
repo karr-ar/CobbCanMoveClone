@@ -14,6 +14,111 @@
 #include "Breaker.h"
 #include "Challenges.h"
 
+class PauseState {
+    sf::FloatRect pauseMenu;
+    sf::FloatRect continueButton;
+    sf::FloatRect exitButton;
+
+    sf::Text continueText;
+    sf::Text exitText;
+
+    bool mouseOnContinueButton = false;
+    bool mouseOnExitButton = false;
+
+public:
+    PauseState(sf::Vector2f windowSize, sf::Font& pressStartFont):continueText(pressStartFont), exitText(pressStartFont) {
+
+        float menuWidth = 300;
+        float menuHeight = 350;
+
+        float startX = windowSize.x / 2 - menuWidth/2;
+        float startY = windowSize.y / 2 - menuHeight/2;
+
+        pauseMenu = sf::FloatRect({startX,startY}, {menuWidth,menuHeight});
+        
+        float buttonWidth = 200;
+        float buttonHeight = 50;
+
+        startX = windowSize.x / 2 - buttonWidth/2;
+        startY = windowSize.y / 2 - buttonHeight/2 - 50 ;
+        float spacing = 50;
+
+        continueButton = sf::FloatRect({ startX,startY }, { buttonWidth, buttonHeight });
+        exitButton = sf::FloatRect({ startX,startY + continueButton.size.y + spacing }, { buttonWidth, buttonHeight });
+
+        continueText.setString("Resume");
+        continueText.setCharacterSize(10);
+        continueText.setOrigin(continueText.getLocalBounds().getCenter());
+        continueText.setPosition(continueButton.getCenter());
+
+        exitText.setString("Exit");
+        exitText.setCharacterSize(10);
+        exitText.setOrigin(exitText.getLocalBounds().getCenter());
+        exitText.setPosition(exitButton.getCenter());
+    }
+    
+    std::string handleEvent(const sf::Event& event, sf::RenderWindow& window) {
+        mouseOnExitButton = false;
+        mouseOnContinueButton = false;
+
+        sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
+        sf::Vector2f mousePos = window.mapPixelToCoords(pixelPos);
+
+        if (exitButton.contains(mousePos)) {
+            mouseOnExitButton = true;
+        }
+        if (continueButton.contains(mousePos)) {
+            mouseOnContinueButton = true;
+        }
+
+        if (auto* mp = event.getIf<sf::Event::MouseButtonPressed>()) {
+            if (mp->button == sf::Mouse::Button::Left) {
+                if (mouseOnContinueButton) return "continue";
+                if (mouseOnExitButton) return "quit";
+            }
+        }
+        return "";
+    }
+
+    void draw(sf::RenderWindow& window) {
+        sf::RectangleShape pausemenu(pauseMenu.size);
+        pausemenu.setFillColor(sf::Color::Black);
+        pausemenu.setOutlineColor(sf::Color::Blue);
+        pausemenu.setPosition(pauseMenu.position);
+        pausemenu.setOutlineThickness(4.f);
+        window.draw(pausemenu);
+
+        sf::RectangleShape continueBox(continueButton.size);
+        continueBox.setOrigin({ continueButton.size.x / 2.f, continueButton.size.y / 2.f });
+        continueBox.setPosition({
+        continueButton.position.x + continueButton.size.x / 2.f,
+        continueButton.position.y + continueButton.size.y / 2.f
+            });
+        if (mouseOnContinueButton) continueBox.setScale({ 1.1,1 });
+        else continueBox.setScale({ 1,1 });
+        continueBox.setFillColor(sf::Color::Transparent);
+        continueBox.setOutlineColor(sf::Color::White);
+        continueBox.setOutlineThickness(2.f);
+        window.draw(continueBox);
+
+        sf::RectangleShape quitBox(exitButton.size);
+        quitBox.setOrigin({ exitButton.size.x / 2.f, exitButton.size.y / 2.f });
+        quitBox.setPosition({
+        exitButton.position.x + exitButton.size.x / 2.f,
+        exitButton.position.y + exitButton.size.y / 2.f
+            });
+        if (mouseOnExitButton) quitBox.setScale({ 1.1,1 });
+        else quitBox.setScale({ 1,1 });
+        quitBox.setFillColor(sf::Color::Transparent);
+        quitBox.setOutlineColor(sf::Color::White);
+        quitBox.setOutlineThickness(2.f);
+        window.draw(quitBox);
+
+        window.draw(continueText);
+        window.draw(exitText);
+    }
+};
+
 class PlayingState : public GameState {
 public:
     PlayingState(const std::unordered_map<std::string, float>& configData, sf::Vector2f windowSize,  ResourceHolder<TextureID,
@@ -111,5 +216,8 @@ private:
     std::vector <Breaker> breakers;
 
     std::unordered_map<Challenges, bool> challenges;
+
+    bool gamePause = false;
+    PauseState pauseState;
 
 };

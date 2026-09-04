@@ -37,7 +37,7 @@ LoadingState::LoadingState(sf::Vector2f windowSize, sf::Font& pressStartFont, in
 			challengeText2.push_back(ChallengeAnimation(pair.first, pressStartFont, 0.2f, { text2X, text2Y }, 25, sf::Color::Red));
 	}
 
-	pressToContinue.setCharacterSize(25);
+	pressToContinue.setCharacterSize(17);
 	pressToContinue.setFillColor(sf::Color::Transparent);
 	pressToContinue.setString("Press Any Button To Continue");
 	pressToContinue.setPosition({startX,  startY + levelText[0].getCharacterSize() + 5 * spacing + challengeText.size() * (spacing + charSize) });

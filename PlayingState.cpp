@@ -3,11 +3,12 @@
 
 PlayingState::PlayingState(const std::unordered_map<std::string, float>& config, sf::Vector2f winSize,ResourceHolder<TextureID, sf::Texture>& textureHolder ,
     int noOfCoals, int noOfBreakers, sf::Font& pressStartFont, Maps mapp, std::unordered_map<Challenges, bool> &challenges)
-    : configData(config), windowSize(winSize) ,  textureHolder(textureHolder) ,pressStartFont(pressStartFont), coalText(pressStartFont), breakerText(pressStartFont)
+    : configData(config), windowSize(winSize) ,  textureHolder(textureHolder) ,pressStartFont(pressStartFont), coalText(pressStartFont), breakerText(pressStartFont) , pauseState(windowSize,pressStartFont)
 {
     this->noOfCoals = noOfCoals;
     this->noOfBreakers = noOfBreakers;
     this->challenges = challenges;
+
     
     //load Config Data
     float cobbsNormalSpeed = configData.count("cobbs_normal_speed") ? configData["cobbs_normal_speed"] : 0;
@@ -101,7 +102,22 @@ void PlayingState::handleEvent(const sf::Event& event, sf::RenderWindow& window)
         view.setSize(newSize);
         windowSize = newSize;
     }
+
     if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+        if (keyPressed->scancode == sf::Keyboard::Scancode::Escape) {
+            gamePause = !gamePause;
+            return; 
+        }
+    }
+    if (gamePause) {
+        std::string state = pauseState.handleEvent(event,window);
+        if (state == "continue") gamePause = false;
+        else if (state == "quit") gameOver = "menu";
+        return;
+    }
+
+    if (const auto* keyPressed = event.getIf<sf::Event::KeyPressed>()) {
+
         if (keyPressed->scancode == player->getEquipButton()) {
             bool pressedInteractButton = false;
             for (int i = 0; i < breakers.size(); i++) {
@@ -131,63 +147,65 @@ void PlayingState::handleInputs() {
     }
 }
 void PlayingState::update(float dt) {
-    sf::Vector2f offsetPlayer = player->update(dt);
-    player->move(sf::Vector2f(offsetPlayer.x, 0));
-    playerWallCollision(true);
-    player->move(sf::Vector2f(0, offsetPlayer.y));
-    playerWallCollision(false);
+    if (!gamePause) {
+        sf::Vector2f offsetPlayer = player->update(dt);
+        player->move(sf::Vector2f(offsetPlayer.x, 0));
+        playerWallCollision(true);
+        player->move(sf::Vector2f(0, offsetPlayer.y));
+        playerWallCollision(false);
 
-    if (challenges[Challenges::YouCanStarve])  updateHungerSystem(dt);
-    if (challenges[Challenges::YouCanFreeze])  updateTemperatureSystem(dt);
+        if (challenges[Challenges::YouCanStarve])  updateHungerSystem(dt);
+        if (challenges[Challenges::YouCanFreeze])  updateTemperatureSystem(dt);
 
-    addScent();
-    updateScent(dt);
-    deleteScent();
+        addScent();
+        updateScent(dt);
+        deleteScent();
 
-    player->setVisibility(items,furnace); // constantlly checks for player being under the light source
-    for (auto& cobb : cobbs) {
-        cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
-    }
-    
+        player->setVisibility(items, furnace); // constantlly checks for player being under the light source
+        for (auto& cobb : cobbs) {
+            cobb->canCobbSeeThePlayer(player->getPosition(), player->getVisibility());
+        }
 
-    workOnCobbCanHear();
-    for (auto& cobb : cobbs) {
-        cobb->setScentRetentionAndLastPositionSmelled(scent);
 
-        cobb->move(sf::Vector2f(cobb->update(dt)));
-    }
-    
+        workOnCobbCanHear();
+        for (auto& cobb : cobbs) {
+            cobb->setScentRetentionAndLastPositionSmelled(scent);
 
-    //update escalators sprite
-    updateEscalator(dt);
+            cobb->move(sf::Vector2f(cobb->update(dt)));
+        }
 
-    //update furnace
-    furnace->update(dt);
 
-    //check if anythings on furnace
-    furnaceBurns();
-    //jumpscare
-    playerCobbCollision();
-    //freeze or starve
-    playerFreezesOrDiesOfHunger();
+        //update escalators sprite
+        updateEscalator(dt);
 
-    escalatorMovesAnythingOnIt();
+        //update furnace
+        furnace->update(dt);
 
-    updateItems(dt);
-    deleteItems();
+        //check if anythings on furnace
+        furnaceBurns();
+        //jumpscare
+        playerCobbCollision();
+        //freeze or starve
+        playerFreezesOrDiesOfHunger();
 
-    playerBreakerCollision();
-    updateBreakers(dt);
+        escalatorMovesAnythingOnIt();
 
-    view.setCenter(player->getPosition()); //for now the camera is rigid but ill fix it  later
+        updateItems(dt);
+        deleteItems();
 
-    tasksCompleted();
+        playerBreakerCollision();
+        updateBreakers(dt);
 
-    if (noOfCoals > 0) {
-        coalText.setString("Coals Delivered : " + std::to_string(noOfCoalsBurned) + "/" + std::to_string(noOfCoals));
-    }
-    if (noOfBreakers > 0) {
-        breakerText.setString("Breakers Flipped : " + std::to_string(noOfBreakersFlipped) + "/" + std::to_string(noOfBreakers));
+        view.setCenter(player->getPosition()); //for now the camera is rigid but ill fix it  later
+
+        tasksCompleted();
+
+        if (noOfCoals > 0) {
+            coalText.setString("Coals Delivered : " + std::to_string(noOfCoalsBurned) + "/" + std::to_string(noOfCoals));
+        }
+        if (noOfBreakers > 0) {
+            breakerText.setString("Breakers Flipped : " + std::to_string(noOfBreakersFlipped) + "/" + std::to_string(noOfBreakers));
+        }
     }
 }
 
@@ -298,6 +316,8 @@ void PlayingState::render(sf::RenderWindow& window) {
     //displaying texts
     window.draw(coalText);
     window.draw(breakerText);
+
+    if(gamePause)pauseState.draw(window);
 
     window.display();
 }

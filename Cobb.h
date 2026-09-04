@@ -47,6 +47,9 @@ class Cobb :
 
     std::unordered_map<Challenges, bool> challenges;
 
+    bool isPaused = false;
+    float pauseTimer = 0.f;
+
 public:
     Cobb(sf::Texture &cobbTexture, float velocity, float cobbInvestigationSpeed, float cobbChasingSpeed, sf::Vector2f position, sf::Vector2f direction, float cobbScaledBy, float cobbsVisualRadius
                                                                         , float cobb_smell_radius , float least_score_that_will_enrage_cobb , float searchingTime , std::unordered_map<Challenges, bool> challenges);

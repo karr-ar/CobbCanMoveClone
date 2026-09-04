@@ -80,22 +80,19 @@ void Game::run() {
 			currentState = std::make_unique<PlayingState>(configData, windowSize,textureHolder, noOfCoal,noOfBreakers , pressStartFont , map, challenges);
 		}
 		else if (currentState->isFinished() == "jumpscare") {
-			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::JumpScare), windowSize ,21, 0.05);
+			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::JumpScare), windowSize ,21, 0.05 , pressStartFont , "jumpscared");
 		}
 		else if (currentState->isFinished() == "froze") {
-			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::FrozeToDeath), windowSize, 20, 0.02);
+			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::FrozeToDeath), windowSize, 20, 0.02, pressStartFont , "froze");
 		}
 		else if (currentState->isFinished() == "burned") {
-			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::BurntToDeath), windowSize, 20, 0.02);
+			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::BurntToDeath), windowSize, 20, 0.03, pressStartFont , "burned");
 		}
 		else if (currentState->isFinished() == "starved") {
-			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::StarvedToDeath), windowSize, 20, 0.1);
+			currentState = std::make_unique<DeathState>(textureHolder.get(TextureID::StarvedToDeath), windowSize, 20, 0.1, pressStartFont , "starved");
 		}
 		else if (currentState->isFinished() == "menu") {
 			currentState = std::make_unique<MenuState>(windowSize, pressStartFont, level);
-		}
-		else if (currentState->isFinished() == "loadingScreen") {
-
 		}
 		else if (currentState->isFinished() == "win") {
 			if (level < 7) {

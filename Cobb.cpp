@@ -48,17 +48,27 @@ void Cobb::RandomMovement(sf::Vector2f nextRandomPos) {
 		//direction = direction.normalized();
 		//this->setDirection(direction);
 
-
-		updateCobbsPosition = false;
-		
+		updateCobbsPosition = false;		
 	}
+
+	if (isPaused) {
+		followTheGivenPosition(getPosition());
+		return; 
+	}
+
+	if ((rand() % 1000) < 1.8) { // ~0.18% chance per frame — tune this
+		isPaused = true;
+		pauseTimer = 0.6f + static_cast<float>(rand() % 100) / 100.f * 1.0f; // random 0.6s–1.6s pause
+		return;
+	}
+
 	followTheGivenPosition(cobbsNewLocation);
 	//ive to also add random stops for cobb and fix its sprite too later to stop moving its legs when its stopped.
 
 	
 	if (sqrt(pow(getPosition().x-cobbsNewLocation.x,2)+ pow(getPosition().y - cobbsNewLocation.y, 2)) < 5 ){
 		updateCobbsPosition = true;
-		if ((rand() % 100) < 40) {
+		if ((rand() % 100) < 0) {
 			startInvestigation(cobbsNewLocation);
 		}
 	}
@@ -67,6 +77,13 @@ sf::Vector2f Cobb::update(float dt) {
 	
 	cobbAnimation.update(0, dt);
 	cobbSprite.setTextureRect(cobbAnimation.getXyRect());
+
+	if (isPaused) {
+		pauseTimer -= dt;
+		if (pauseTimer <= 0.f) {
+			isPaused = false;
+		}
+	}
 
 	float scale;
 	if (challenges[Challenges::CobbCanChase]) scale = cobbScaledBy;
